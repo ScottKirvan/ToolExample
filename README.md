@@ -98,9 +98,10 @@ Use the [Issues](https://github.com/ScottKirvan/ToolExample/issues) link, above.
 A huge thank you to [Eric Zhang](https://github.com/lxjk) for the work he put into the [original tutorial project](https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html).
 
 Contributors:  
-[Eric Zhang](https://github.com/lxjk)  
+[Eric Zhang](https://github.com/lxjk) (OG!)
 [Scott Kirvan](https://github.com/ScottKirvan) (2021-present)  
-[Razdvizh](https://github.com/Razdvizh) (2023)  
-You!
+[Razdvizh](https://github.com/Razdvizh) (2023) 
+[duyaokun](https://github.com/duyaokun) (2024)
+You! (Future!)
 
 _ToolExample is licensed under the [MIT License](LICENSE.md)._
