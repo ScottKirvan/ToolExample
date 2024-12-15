@@ -70,7 +70,7 @@ If you don't want to do the Write/PR process yourself, but would still like to c
 		-   Xoreax Incredibuild (Dev Tools Package)
 		-   Six-Core Xeon E5-2643 @ 3.4GHz
 	- I get by with a 16 core AMD Ryzen 9, Windows 11, MSDev2022, and 40 GB RAM on my gaming laptop.
-- Unreal Engine 5.1
+- Unreal Engine 5.5
 	- This repo also supports older versions, just download/clone the [branch](https://github.com/ScottKirvan/ToolExample/branches) you need.
 - Microsoft Visual Studio 2022
 	- Epic still recommends the 2019 version, but I'm using 2022 - get the free-to-use [Community version here](https://visualstudio.microsoft.com/vs/community/).
