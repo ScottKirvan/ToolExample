@@ -44,9 +44,7 @@ EReimportResult::Type UReimportExampleDataFactory::Reimport(UObject* Obj)
 		const TCHAR* Ptr = *Data;
 		ExampleData->Modify();
 		ExampleData->MarkPackageDirty();
-
-		UExampleDataFactory::MakeExampleDataFromText(ExampleData, Ptr, Ptr + Data.Len());
-
+		ExampleData->ExampleString = Ptr;
 		// save the source file path and timestamp
 		ExampleData->SourceFilePath = UAssetImportData::SanitizeImportFilename(CurrentFilename, ExampleData->GetOutermost());
 	}
