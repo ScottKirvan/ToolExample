@@ -94,6 +94,9 @@ A couple of other good resources for getting started:
 ## Submit a Feature Request
 Use the [Issues](https://github.com/ScottKirvan/ToolExample/issues) link, above.  Thanks!
 
+## Further Reading
+Blueprint Libraries are a good entrypoint to plugin development, and I recnetly came across [this](https://unrealist.org/custom-blueprint-nodes/) write-up on creating custom Blueprint nodes.
+
 ## Credits
 A huge thank you to [Eric Zhang](https://github.com/lxjk) for the work he put into the [original tutorial project](https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html).
 
