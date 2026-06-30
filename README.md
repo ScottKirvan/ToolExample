@@ -89,7 +89,7 @@ A couple of other good resources for getting started:
 
 ## Support/Contact
 - Feel free to reach out to me on the [Unreal Slackers](https://discord.gg/unreal-slackers) discord.  I'm @Fragmanget_.  There is also a ton of other Unreal programmers up there, so if I'm not around to help, someone else be able to get you going.
-- You can also reach me on my personal [Discord Server](https://discord.gg/TSKHvVFYxB) (@cptvideo), via [LinkedIn](https://www.linkedin.com/in/scottkirvan/), or <a href="mailto:ToolExample@skvfx.com">email</a>.
+- You can also reach me on my personal [Discord Server](https://discord.gg/TN6XJSNK5Y) (@cptvideo), via [LinkedIn](https://www.linkedin.com/in/scottkirvan/), or <a href="mailto:ToolExample@skvfx.com">email</a>.
 
 ## Submit a Feature Request
 Use the [Issues](https://github.com/ScottKirvan/ToolExample/issues) link, above.  Thanks!
