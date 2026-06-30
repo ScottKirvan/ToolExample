@@ -1,0 +1,15 @@
+name: Deploy Docs to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    uses: ScottKirvan/.github/.github/workflows/reusable-docs-deploy.yml@main

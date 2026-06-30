@@ -1,0 +1,53 @@
+name: Release Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  models: read
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ github.token }}
+          config-file: .github/release-please/release-please-config.json
+          manifest-file: .github/release-please/.release-please-manifest.json
+
+  improve-release-notes:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    uses: ScottKirvan/.github/.github/workflows/reusable-release-notes.yml@main
+    with:
+      tag_name: ${{ needs.release-please.outputs.tag_name }}
+      project_name: "ToolExample"
+      project_context: "ToolExample provides UX/UI C/C++ examples for creating editor tools in Unreal Engine."
+      header: |
+        ## ToolExample
+
+        > UX/UI C/C++ examples for Unreal Engine editor tools.
+
+        ---
+      footer: |
+        ---
+        📖 [User Guide](https://www.scottkirvan.com/ToolExample/) · 🐛 [Report an Issue](https://github.com/ScottKirvan/ToolExample/issues/new?template=bug_report.md) · ✨ [Request Feature](https://github.com/ScottKirvan/ToolExample/issues/new?template=feature_request.md) · 💬 [Discord](https://discord.gg/TN6XJSNK5Y)
+    secrets: inherit
+
+  discord-notify:
+    needs: [release-please, improve-release-notes]
+    if: ${{ needs.release-please.outputs.release_created }}
+    uses: ScottKirvan/.github/.github/workflows/reusable-discord-notify.yml@main
+    with:
+      tag_name: ${{ needs.release-please.outputs.tag_name }}
+      project_name: "ToolExample"
+    secrets: inherit
