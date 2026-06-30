@@ -51,4 +51,5 @@ jobs:
     with:
       tag_name: ${{ needs.release-please.outputs.tag_name }}
       project_name: "ToolExample"
+      emoji: "🧑‍🎓"
     secrets: inherit
