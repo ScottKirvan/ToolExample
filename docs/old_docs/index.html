@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<!-- saved from url=(0063)https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html -->
+<html>
+<body class="post-template tag-U-E tag-Unreal tag-Tools"><div id="MathJax_Message" style="display: none;"></div>
+
+  <article class="post-container post-container--single">
+
+    <header class="post-header">
+      <div class="post-meta">
+      </div>
+      <h1 class="post-title">How to Make Tools in UE4</h1>
+        by Eric Zhang - original article:  <a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html"> https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html
+        </a>
+    </header>
+
+    <section class="post tag-U-E tag-Unreal tag-Tools">
+      <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong><em>This article is based on Unreal 4.17 code base, tested in Unreal 4.23.</em></strong></p>
+</div>
+<div class="paragraph">
+<p>This is a step by step tutorial to write tools for your Unreal project. I would assume you are familiar with Unreal already. This is NOT a tutorial for SLATE code, that deserves a tutorial for its own, and there are lots of SLATE example in Unreal already. With that said there will be some basic SLATE code in this tutorial to build UI widget, and I will try to show some different use cases for each example.</p>
+</div>
+<div class="paragraph">
+<p>The example project is available in <a href="https://github.com/lxjk/ToolExample" class="bare">https://github.com/lxjk/ToolExample</a> . Right click on the "<strong>ToolExample.uproject</strong>" and choose Switch Unreal Engine version to link to your engine.</p>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle" class="title">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_setup_editor_module">Setup Editor Module</a>
+<ul class="sectlevel2">
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_iexamplemoduleinterface_h">IExampleModuleInterface.h</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_toolexmampleeditor_build_cs">ToolExmampleEditor.Build.cs</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_toolexampleeditor_h_toolexampleeditor_cpp">ToolExampleEditor.h &amp; ToolExampleEditor.cpp</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_toolexampleeditor_target_cs">ToolExampleEditor.Target.cs</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_toolexample_uproject">ToolExample.uproject</a></li>
+</ul>
+</li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_add_custom_menu">Add Custom Menu</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_advanced_menu">Advanced Menu</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_create_a_tab_window">Create a Tab (Window)</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_customize_details_panel">Customize Details Panel</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_custom_data_type">Custom Data Type</a>
+<ul class="sectlevel2">
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_new_custom_data">New Custom Data</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_import_custom_data">Import Custom Data</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_reimport">Reimport</a></li>
+</ul>
+</li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_custom_editor_mode">Custom Editor Mode</a>
+<ul class="sectlevel2">
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_setup_editor_mode">Setup Editor Mode</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_render_and_click">Render and Click</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_use_transform_widget">Use Transform Widget</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_key_input_support_right_click_menu_and_others">Key input support, right click menu, and others</a></li>
+</ul>
+</li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_custom_project_settings">Custom Project Settings</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_tricks">Tricks</a>
+<ul class="sectlevel2">
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_use_widget_reflector">Use Widget Reflector</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_is_my_tool_running_in_the_editor_or_game">Is my tool running in the editor or game?</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_useful_uproperty_meta_marker">Useful UPROPERTY() meta marker</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_make_custom_animation_blueprint_node">Make custom Animation Blueprint Node</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_debug_draw_tricks">Debug Draw Tricks</a></li>
+<li><a href="https://lxjk.github.io/2019/10/01/How-to-Make-Tools-in-U-E.html#_other_tricks_for_editor_mode">Other Tricks for Editor Mode</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_setup_editor_module">Setup Editor Module</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To make proper tools in Unreal it is almost a must to setup a custom editor module first. This will provide you an entry point for you custom tools, and also make sure your tool will not be included other than running in editor.</p>
+</div>
+<div class="paragraph">
+<p>Here we create a new ToolExample project.</p>
+</div>
+<div class="paragraph">
+<p>First we want to create a "ToolExampleEditor" folder and add the following files. This will be our new editor module.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/001.png" alt="001.png" width="331">
+</div>
+</div>
+<div class="sect2">
+<h3 id="_iexamplemoduleinterface_h">IExampleModuleInterface.h</h3>
+<div class="paragraph">
+<p>In this header, we first define <strong>IExampleModuleListenerInterface</strong>, a convenient interface to provide event when our module starts up or shuts down. Almost all our later tools will need to implement this interface.</p>
+</div>
+<div class="paragraph">
+<p>Then we define <strong>IExampleModuleInterface</strong>, this is not necessary if you only have one editor module, but if you have more than that, this will handle event broadcasting for you.
+It is required that a module inherit from <strong>IModuleInterface</strong>, so our interface will inherit from the same class.</p>
+</div>
+<div class="listingblock">
+<div class="title">IExampleModuleInterface.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ModuleManager.h"</span></span>
+
+<span class="hljs-keyword">class</span> IExampleModuleListenerInterface
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnStartupModule</span><span class="hljs-params">()</span> </span>{};
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnShutdownModule</span><span class="hljs-params">()</span> </span>{};
+};
+
+<span class="hljs-keyword">class</span> IExampleModuleInterface : <span class="hljs-keyword">public</span> IModuleInterface
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">StartupModule</span><span class="hljs-params">()</span> override
+    </span>{
+        <span class="hljs-keyword">if</span> (!IsRunningCommandlet())
+        {
+            AddModuleListeners();
+            <span class="hljs-keyword">for</span> (int32 i = <span class="hljs-number">0</span>; i &lt; ModuleListeners.Num(); ++i)
+            {
+                ModuleListeners[i]-&gt;OnStartupModule();
+            }
+        }
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ShutdownModule</span><span class="hljs-params">()</span> override
+    </span>{
+        <span class="hljs-keyword">for</span> (int32 i = <span class="hljs-number">0</span>; i &lt; ModuleListeners.Num(); ++i)
+        {
+            ModuleListeners[i]-&gt;OnShutdownModule();
+        }
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">AddModuleListeners</span><span class="hljs-params">()</span> </span>{};
+
+<span class="hljs-keyword">protected</span>:
+    TArray&lt;TSharedRef&lt;IExampleModuleListenerInterface&gt;&gt; ModuleListeners;
+};</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_toolexmampleeditor_build_cs">ToolExmampleEditor.Build.cs</h3>
+<div class="paragraph">
+<p>This file you can copy from ToolExample.Build.cs. We added commonly used module names to dependency. Note we add "ToolExample" module here as well.</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExmampleEditor.Build.cs</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">PublicDependencyModuleNames.AddRange(
+            <span class="hljs-keyword">new</span> <span class="hljs-built_in">string</span>[] {
+                <span class="hljs-string">"Core"</span>,
+                <span class="hljs-string">"Engine"</span>,
+                <span class="hljs-string">"CoreUObject"</span>,
+                <span class="hljs-string">"InputCore"</span>,
+                <span class="hljs-string">"LevelEditor"</span>,
+                <span class="hljs-string">"Slate"</span>,
+                <span class="hljs-string">"EditorStyle"</span>,
+                <span class="hljs-string">"AssetTools"</span>,
+                <span class="hljs-string">"EditorWidgets"</span>,
+                <span class="hljs-string">"UnrealEd"</span>,
+                <span class="hljs-string">"BlueprintGraph"</span>,
+                <span class="hljs-string">"AnimGraph"</span>,
+                <span class="hljs-string">"ComponentVisualizers"</span>,
+                <span class="hljs-string">"ToolExample"</span>
+        }
+        );
+
+
+PrivateDependencyModuleNames.AddRange(
+            <span class="hljs-keyword">new</span> <span class="hljs-built_in">string</span>[]
+            {
+                <span class="hljs-string">"Core"</span>,
+                <span class="hljs-string">"CoreUObject"</span>,
+                <span class="hljs-string">"Engine"</span>,
+                <span class="hljs-string">"AppFramework"</span>,
+                <span class="hljs-string">"SlateCore"</span>,
+                <span class="hljs-string">"AnimGraph"</span>,
+                <span class="hljs-string">"UnrealEd"</span>,
+                <span class="hljs-string">"KismetWidgets"</span>,
+                <span class="hljs-string">"MainFrame"</span>,
+                <span class="hljs-string">"PropertyEditor"</span>,
+                <span class="hljs-string">"ComponentVisualizers"</span>,
+                <span class="hljs-string">"ToolExample"</span>
+            }
+            );</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_toolexampleeditor_h_toolexampleeditor_cpp">ToolExampleEditor.h &amp; ToolExampleEditor.cpp</h3>
+<div class="paragraph">
+<p>Here we define the actual module class, implementing <strong>IExampleModuleInterface</strong> we defined above. We include headers we need for following sections as well. Make sure the module name you use to get module is the same as the one you pass in <strong>IMPLEMENT_GAME_MODULE</strong> macro.</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"UnrealEd.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SlateBasics.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SlateExtras.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Editor/LevelEditor/Public/LevelEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Editor/PropertyEditor/Public/PropertyEditing.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"IAssetTypeActions.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"IExampleModuleInterface.h"</span></span>
+
+<span class="hljs-keyword">class</span> FToolExampleEditor : <span class="hljs-keyword">public</span> IExampleModuleInterface
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-comment">/** IModuleInterface implementation */</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">StartupModule</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ShutdownModule</span><span class="hljs-params">()</span> override</span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">AddModuleListeners</span><span class="hljs-params">()</span> override</span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">inline</span> FToolExampleEditor&amp; <span class="hljs-title">Get</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> FModuleManager::LoadModuleChecked&lt; FToolExampleEditor &gt;(<span class="hljs-string">"ToolExampleEditor"</span>);
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">inline</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">IsAvailable</span><span class="hljs-params">()</span>
+    </span>{
+        <span class="hljs-keyword">return</span> FModuleManager::Get().IsModuleLoaded(<span class="hljs-string">"ToolExampleEditor"</span>);
+    }
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"IExampleModuleInterface.h"</span></span>
+
+IMPLEMENT_GAME_MODULE(FToolExampleEditor, ToolExampleEditor)
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::AddModuleListeners()
+{
+    <span class="hljs-comment">// add tools later</span>
+}
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::StartupModule()
+{
+    IExampleModuleInterface::StartupModule();
+}
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::ShutdownModule()
+{
+    IExampleModuleInterface::ShutdownModule();
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_toolexampleeditor_target_cs">ToolExampleEditor.Target.cs</h3>
+<div class="paragraph">
+<p>We need to modify this file to load our module in Editor mode (Don’t change ToolExample.Target.cs), add the following:</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.Target.cs</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">ExtraModuleNames.AddRange( <span class="hljs-keyword">new</span> <span class="hljs-built_in">string</span>[] { <span class="hljs-string">"ToolExampleEditor"</span> });</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_toolexample_uproject">ToolExample.uproject</h3>
+<div class="paragraph">
+<p>Similarly, we need to include our modules here, add the following:</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExample.uproject</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">{
+    <span class="hljs-string">"Name"</span>: <span class="hljs-string">"ToolExampleEditor"</span>,
+    <span class="hljs-string">"Type"</span>: <span class="hljs-string">"Editor"</span>,
+    <span class="hljs-string">"LoadingPhase"</span>: <span class="hljs-string">"PostEngineInit"</span>,
+    <span class="hljs-string">"AdditionalDependencies"</span>: [
+        <span class="hljs-string">"Engine"</span>
+    ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now the editor module should be setup properly.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_add_custom_menu">Add Custom Menu</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Next we are going to add a custom menu, so we can add widget in the menu to run a command or open up a window.</p>
+</div>
+<div class="paragraph">
+<p>First we need to add menu extensions related functions in our editor module <strong>ToolExampleEditor</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">AddMenuExtension</span><span class="hljs-params">(<span class="hljs-keyword">const</span> FMenuExtensionDelegate &amp;extensionDelegate, FName extensionHook, <span class="hljs-keyword">const</span> TSharedPtr&lt;FUICommandList&gt; &amp;CommandList = <span class="hljs-literal">NULL</span>, EExtensionHook::Position position = EExtensionHook::Before)</span></span>;
+    TSharedRef&lt;FWorkspaceItem&gt; GetMenuRoot() { <span class="hljs-keyword">return</span> MenuRoot; };
+
+<span class="hljs-keyword">protected</span>:
+    TSharedPtr&lt;FExtensibilityManager&gt; LevelEditorMenuExtensibilityManager;
+    TSharedPtr&lt;FExtender&gt; MenuExtender;
+
+    <span class="hljs-keyword">static</span> TSharedRef&lt;FWorkspaceItem&gt; MenuRoot;
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">MakePulldownMenu</span><span class="hljs-params">(FMenuBarBuilder &amp;menuBuilder)</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">FillPulldownMenu</span><span class="hljs-params">(FMenuBuilder &amp;menuBuilder)</span></span>;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the cpp file, define <strong>MenuRoot</strong> and add the implement all the functions. Here we will add a menu called "Example" and create 2 sections: "Section 1" and "Section 2", with extension hook name "Section_1" and "Section_2".</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">TSharedRef&lt;FWorkspaceItem&gt; FToolExampleEditor::MenuRoot = FWorkspaceItem::NewGroup(FText::FromString(<span class="hljs-string">"Menu Root"</span>));
+
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::AddMenuExtension(<span class="hljs-keyword">const</span> FMenuExtensionDelegate &amp;extensionDelegate, FName extensionHook, <span class="hljs-keyword">const</span> TSharedPtr&lt;FUICommandList&gt; &amp;CommandList, EExtensionHook::Position position)
+{
+    MenuExtender-&gt;AddMenuExtension(extensionHook, position, CommandList, extensionDelegate);
+}
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::MakePulldownMenu(FMenuBarBuilder &amp;menuBuilder)
+{
+    menuBuilder.AddPullDownMenu(
+        FText::FromString(<span class="hljs-string">"Example"</span>),
+        FText::FromString(<span class="hljs-string">"Open the Example menu"</span>),
+        FNewMenuDelegate::CreateRaw(<span class="hljs-keyword">this</span>, &amp;FToolExampleEditor::FillPulldownMenu),
+        <span class="hljs-string">"Example"</span>,
+        FName(TEXT(<span class="hljs-string">"ExampleMenu"</span>))
+    );
+}
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::FillPulldownMenu(FMenuBuilder &amp;menuBuilder)
+{
+    <span class="hljs-comment">// just a frame for tools to fill in</span>
+    menuBuilder.BeginSection(<span class="hljs-string">"ExampleSection"</span>, FText::FromString(<span class="hljs-string">"Section 1"</span>));
+    menuBuilder.AddMenuSeparator(FName(<span class="hljs-string">"Section_1"</span>));
+    menuBuilder.EndSection();
+
+    menuBuilder.BeginSection(<span class="hljs-string">"ExampleSection"</span>, FText::FromString(<span class="hljs-string">"Section 2"</span>));
+    menuBuilder.AddMenuSeparator(FName(<span class="hljs-string">"Section_2"</span>));
+    menuBuilder.EndSection();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Finally in <strong>StartupModule</strong> we add the following before we call the parent function. We add our menu after "Window" menu.</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">void</span> FToolExampleEditor::StartupModule()
+{
+    <span class="hljs-keyword">if</span> (!IsRunningCommandlet())
+    {
+        FLevelEditorModule&amp; LevelEditorModule = FModuleManager::LoadModuleChecked&lt;FLevelEditorModule&gt;(<span class="hljs-string">"LevelEditor"</span>);
+        LevelEditorMenuExtensibilityManager = LevelEditorModule.GetMenuExtensibilityManager();
+        MenuExtender = MakeShareable(<span class="hljs-keyword">new</span> FExtender);
+        MenuExtender-&gt;AddMenuBarExtension(<span class="hljs-string">"Window"</span>, EExtensionHook::After, <span class="hljs-literal">NULL</span>, FMenuBarExtensionDelegate::CreateRaw(<span class="hljs-keyword">this</span>, &amp;FToolExampleEditor::MakePulldownMenu));
+        LevelEditorMenuExtensibilityManager-&gt;AddExtender(MenuExtender);
+    }
+    IExampleModuleInterface::StartupModule();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now if you run it you should see the custom menu get added with two sections.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/002.png" alt="002.png" width="329">
+</div>
+</div>
+<div class="paragraph">
+<p>Next we can add our first tool to register to our menu. First add two new files:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/003.png" alt="003.png" width="190">
+</div>
+</div>
+<div class="paragraph">
+<p>This class will inherit from <strong>IExampleModuleListenerInterface</strong>, and we add function to create menu entry. We also add <strong>FUICommandList</strong>, which will define and map a menu item to a function. Finally we add our only menu function <strong>MenuCommand1</strong>, this function will be called when user click on the menu item.</p>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/IExampleModuleInterface.h"</span></span>
+
+<span class="hljs-keyword">class</span> MenuTool : <span class="hljs-keyword">public</span> IExampleModuleListenerInterface, <span class="hljs-keyword">public</span> TSharedFromThis&lt;MenuTool&gt;
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">virtual</span> ~MenuTool() {}
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnStartupModule</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnShutdownModule</span><span class="hljs-params">()</span> override</span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">MakeMenuEntry</span><span class="hljs-params">(FMenuBuilder &amp;menuBuilder)</span></span>;
+
+<span class="hljs-keyword">protected</span>:
+    TSharedPtr&lt;FUICommandList&gt; CommandList;
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">MapCommands</span><span class="hljs-params">()</span></span>;
+
+    <span class="hljs-comment">// UI Command functions</span>
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">MenuCommand1</span><span class="hljs-params">()</span></span>;
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>On the cpp side, we got a lot more to do. First we need to define <strong>LOCTEXT_NAMESPACE</strong> at the beginning, and un-define it at the end. This is required to use <strong>UI_COMMAND</strong> macro.
+Then we start filling in each command, first create a <strong>FUICommandInfo</strong> member for each command in command list class, fill in <strong>RegisterCommands</strong> function by using <strong>UI_COMMAND</strong> marcro. Then in <strong>MapCommands</strong> function map each command info to a function. And of course define the command function <strong>MenuTool::MenuCommand1</strong>.</p>
+</div>
+<div class="paragraph">
+<p>In <strong>OnStartupModule</strong>, we create command list, register it, map it, then register to menu extension. In this case we want our item in "Section 1", and <strong>MakeMenuEntry</strong> will be called when Unreal build the menu, in which we simply add <strong>MenuCommand1</strong> to the menu.</p>
+</div>
+<div class="paragraph">
+<p>In <strong>OnShutdownModule</strong>, we need to unregister command list.</p>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"MenuTool.h"</span></span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> LOCTEXT_NAMESPACE <span class="hljs-meta-string">"MenuTool"</span></span>
+
+<span class="hljs-keyword">class</span> MenuToolCommands : <span class="hljs-keyword">public</span> TCommands&lt;MenuToolCommands&gt;
+{
+<span class="hljs-keyword">public</span>:
+
+    MenuToolCommands()
+        : TCommands&lt;MenuToolCommands&gt;(
+        TEXT(<span class="hljs-string">"MenuTool"</span>), <span class="hljs-comment">// Context name for fast lookup</span>
+        FText::FromString(<span class="hljs-string">"Example Menu tool"</span>), <span class="hljs-comment">// Context name for displaying</span>
+        NAME_None,   <span class="hljs-comment">// No parent context</span>
+        FEditorStyle::GetStyleSetName() <span class="hljs-comment">// Icon Style Set</span>
+        )
+    {
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">RegisterCommands</span><span class="hljs-params">()</span> override
+    </span>{
+        UI_COMMAND(MenuCommand1, <span class="hljs-string">"Menu Command 1"</span>, <span class="hljs-string">"Test Menu Command 1."</span>, EUserInterfaceActionType::Button, FInputGesture());
+
+    }
+
+<span class="hljs-keyword">public</span>:
+    TSharedPtr&lt;FUICommandInfo&gt; MenuCommand1;
+};
+
+<span class="hljs-keyword">void</span> MenuTool::MapCommands()
+{
+    <span class="hljs-keyword">const</span> <span class="hljs-keyword">auto</span>&amp; Commands = MenuToolCommands::Get();
+
+    CommandList-&gt;MapAction(
+        Commands.MenuCommand1,
+        FExecuteAction::CreateSP(<span class="hljs-keyword">this</span>, &amp;MenuTool::MenuCommand1),
+        FCanExecuteAction());
+}
+
+<span class="hljs-keyword">void</span> MenuTool::OnStartupModule()
+{
+    CommandList = MakeShareable(<span class="hljs-keyword">new</span> FUICommandList);
+    MenuToolCommands::Register();
+    MapAction();
+    FToolExampleEditor::Get().AddMenuExtension(
+        FMenuExtensionDelegate::CreateRaw(<span class="hljs-keyword">this</span>, &amp;MenuTool::MakeMenuEntry),
+        FName(<span class="hljs-string">"Section_1"</span>),
+        CommandList);
+}
+
+<span class="hljs-keyword">void</span> MenuTool::OnShutdownModule()
+{
+    MenuToolCommands::Unregister();
+}
+
+<span class="hljs-keyword">void</span> MenuTool::MakeMenuEntry(FMenuBuilder &amp;menuBuilder)
+{
+    menuBuilder.AddMenuEntry(MenuToolCommands::Get().MenuCommand1);
+}
+
+<span class="hljs-keyword">void</span> MenuTool::MenuCommand1()
+{
+    UE_LOG(LogClass, Log, TEXT(<span class="hljs-string">"clicked MenuCommand1"</span>));
+}
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">undef</span> LOCTEXT_NAMESPACE</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When this is all done, remember to add this tool as a listener to editor module in <strong>FToolExampleEditor::AddModuleListeners</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">ModuleListeners.Add(MakeShareable(<span class="hljs-keyword">new</span> MenuTool));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now if you build the project, you should see your menu item in the menu. And if you click on it, it will print "clicked MenuCommand1".</p>
+</div>
+<div class="paragraph">
+<p>By now you have a basic framework for tools, You can run anything you want based on a menu click.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/004.png" alt="004.png" width="236">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_advanced_menu">Advanced Menu</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before we jump to window, let’s extend menu functionality for a bit, since there are a lot more you can do.</p>
+</div>
+<div class="paragraph">
+<p>First if you have a lot of items, it will be good to put them in a sub menu. Let’s make two more commands <strong>MenuCommand2</strong> and <strong>MenuCommand3</strong>. You can search for <strong>MenuCommand1</strong> and create two more in each places, other than <strong>MakeMenuEntry</strong>, where we will add sub menu.</p>
+</div>
+<div class="paragraph">
+<p>In <strong>MenuTool</strong>, we add function for sub menu:</p>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">MakeSubMenu</span><span class="hljs-params">(FMenuBuilder &amp;menuBuilder)</span></span>;</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">void</span> MenuTool::MakeSubMenu(FMenuBuilder &amp;menuBuilder)
+{
+    menuBuilder.AddMenuEntry(MenuToolCommands::Get().MenuCommand2);
+    menuBuilder.AddMenuEntry(MenuToolCommands::Get().MenuCommand3);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then we call <strong>AddSubMenu</strong> in <strong>MenuTool::MakeMenuEntry</strong>, after MenuCommand1 is registered so the submenu comes after that.</p>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">void</span> MenuTool::MakeMenuEntry(FMenuBuilder &amp;menuBuilder)
+{
+    ...
+    menuBuilder.AddSubMenu(
+        FText::FromString(<span class="hljs-string">"Sub Menu"</span>),
+        FText::FromString(<span class="hljs-string">"This is example sub menu"</span>),
+        FNewMenuDelegate::CreateSP(<span class="hljs-keyword">this</span>, &amp;MenuTool::MakeSubMenu)
+    );
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you should see sub menu like the following:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/005.png" alt="005.png" width="269">
+</div>
+</div>
+<div class="paragraph">
+<p>Not only you can add simple menu item, you can actually add any widget into the menu. We will try to make a small tool that you can type in a textbox and click a button to set that as tags for selected actors.</p>
+</div>
+<div class="paragraph">
+<p>I’m not going to go into details for each functions I used here, search them in Unreal engine and you should find plenty of use cases.</p>
+</div>
+<div class="paragraph">
+<p>First we add needed member and functions, note this time we are going to use custom widget, so we don’t need to change command list. For <strong>AddTag</strong> fucntion, because it is going to be used for a button, return type have to be <strong>FReply</strong>.</p>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">FName TagToAdd;
+
+<span class="hljs-function">FReply <span class="hljs-title">AddTag</span><span class="hljs-params">()</span></span>;
+<span class="hljs-function">FText <span class="hljs-title">GetTagToAddText</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">OnTagToAddTextCommited</span><span class="hljs-params">(<span class="hljs-keyword">const</span> FText&amp; InText, ETextCommit::Type CommitInfo)</span></span>;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then we fill in those functions. If you type in a text, we save it to <strong>TagToAdd</strong>. If you click on the button, we search all selected actors and make the tag change. We wrap it around a transaction so it will support undo.&nbsp;To use transaction we need to include&nbsp;"ScopedTransaction.h".</p>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">FReply MenuTool::AddTag()
+{
+    <span class="hljs-keyword">if</span> (!TagToAdd.IsNone())
+    {
+        <span class="hljs-function"><span class="hljs-keyword">const</span> FScopedTransaction <span class="hljs-title">Transaction</span><span class="hljs-params">(FText::FromString(<span class="hljs-string">"Add Tag"</span>)</span>)</span>;
+        <span class="hljs-keyword">for</span> (FSelectionIterator It(GEditor-&gt;GetSelectedActorIterator()); It; ++It)
+        {
+            AActor* Actor = <span class="hljs-keyword">static_cast</span>&lt;AActor*&gt;(*It);
+            <span class="hljs-keyword">if</span> (!Actor-&gt;Tags.Contains(TagToAdd))
+            {
+                Actor-&gt;Modify();
+                Actor-&gt;Tags.Add(TagToAdd);
+            }
+        }
+    }
+    <span class="hljs-keyword">return</span> FReply::Handled();
+}
+
+FText MenuTool::GetTagToAddText() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> FText::FromName(TagToAdd);
+}
+
+<span class="hljs-keyword">void</span> MenuTool::OnTagToAddTextCommited(<span class="hljs-keyword">const</span> FText&amp; InText, ETextCommit::Type CommitInfo)
+{
+    FString str = InText.ToString();
+    TagToAdd = FName(*str.Trim());
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then in <strong>MenuTool::MakeMenuEntry</strong>, we create the widget and add it to the menu. Again I will not go into Slate code details.</p>
+</div>
+<div class="listingblock">
+<div class="title">MenuTool.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">void</span> MenuTool::MakeMenuEntry(FMenuBuilder &amp;menuBuilder)
+{
+    ...
+    TSharedRef&lt;SWidget&gt; AddTagWidget =
+        SNew(SHorizontalBox)
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .VAlign(VAlign_Center)
+        [
+            SNew(SEditableTextBox)
+            .MinDesiredWidth(<span class="hljs-number">50</span>)
+            .Text(<span class="hljs-keyword">this</span>, &amp;MenuTool::GetTagToAddText)
+            .OnTextCommitted(<span class="hljs-keyword">this</span>, &amp;MenuTool::OnTagToAddTextCommited)
+        ]
+        + SHorizontalBox::Slot()
+        .AutoWidth()
+        .Padding(<span class="hljs-number">5</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>)
+        .VAlign(VAlign_Center)
+        [
+            SNew(SButton)
+            .Text(FText::FromString(<span class="hljs-string">"Add Tag"</span>))
+            .OnClicked(<span class="hljs-keyword">this</span>, &amp;MenuTool::AddTag)
+        ];
+
+    menuBuilder.AddWidget(AddTagWidget, FText::FromString(<span class="hljs-string">""</span>));
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you have a more complex tool sit in the menu, and you can set actor tags with it:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/006.png" alt="006.png" width="174">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_a_tab_window">Create a Tab (Window)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>While we can do a lot in the menu, it is still more convenient and flexible if you have a window. In Unreal it is called "tab". Because creating a tab from menu is very common for tools, we will make a base class for it first.</p>
+</div>
+<div class="paragraph">
+<p>Add a new file:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/007.png" alt="007.png" width="217">
+</div>
+</div>
+<div class="paragraph">
+<p>The base class is also inherit from <strong>IExampleModuleListenerInterface</strong>. In <strong>OnStartupModule</strong> we register a tab, and unregister it in <strong>OnShutdownModule</strong>. Then in <strong>MakeMenuEntry</strong>, we let <strong>FGlobalTabmanager</strong> to populate tab for this menu item.
+We leave <strong>SpawnTab</strong> function to be overriden by child class to set proper widget.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleTabToolBase.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/IExampleModuleInterface.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"TabManager.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SDockTab.h"</span></span>
+
+<span class="hljs-keyword">class</span> FExampleTabToolBase : <span class="hljs-keyword">public</span> IExampleModuleListenerInterface, <span class="hljs-keyword">public</span> TSharedFromThis&lt; FExampleTabToolBase &gt;
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-comment">// IPixelopusToolBase</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnStartupModule</span><span class="hljs-params">()</span> override
+    </span>{
+        Initialize();
+        FGlobalTabmanager::Get()-&gt;RegisterNomadTabSpawner(TabName, FOnSpawnTab::CreateRaw(<span class="hljs-keyword">this</span>, &amp;FExampleTabToolBase::SpawnTab))
+            .SetGroup(FToolExampleEditor::Get().GetMenuRoot())
+            .SetDisplayName(TabDisplayName)
+            .SetTooltipText(ToolTipText);
+    };
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnShutdownModule</span><span class="hljs-params">()</span> override
+    </span>{
+        FGlobalTabmanager::Get()-&gt;UnregisterNomadTabSpawner(TabName);
+    };
+
+    <span class="hljs-comment">// In this function set TabName/TabDisplayName/ToolTipText</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Initialize</span><span class="hljs-params">()</span> </span>{};
+    <span class="hljs-keyword">virtual</span> TSharedRef&lt;SDockTab&gt; SpawnTab(<span class="hljs-keyword">const</span> FSpawnTabArgs&amp; TabSpawnArgs) { <span class="hljs-keyword">return</span> SNew(SDockTab); };
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MakeMenuEntry</span><span class="hljs-params">(FMenuBuilder &amp;menuBuilder)</span>
+    </span>{
+        FGlobalTabmanager::Get()-&gt;PopulateTabSpawnerMenu(menuBuilder, TabName);
+    };
+
+<span class="hljs-keyword">protected</span>:
+    FName TabName;
+    FText TabDisplayName;
+    FText ToolTipText;
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we add files for tab tool. Other than the normal tool class, we also need a custom panel widget class for the tab itself.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/008.png" alt="008.png" width="218">
+</div>
+</div>
+<div class="paragraph">
+<p>Let’s look at <strong>TabTool</strong> class first, it is inherited from <strong>ExampleTabToolBase</strong> defined above.</p>
+</div>
+<div class="paragraph">
+<p>We set tab name, display name and tool tips in <strong>Initialize</strong> function, and prepare the panel in <strong>SpawnTab</strong> function. Note here we send the tool object itself as a parameter when creating the panel. This is not necessary, but as an example how you can pass in an object to the widget.</p>
+</div>
+<div class="paragraph">
+<p>This tab tool is added in "Section 2" in the custom menu.</p>
+</div>
+<div class="listingblock">
+<div class="title">TabTool.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ExampleTabToolBase.h"</span></span>
+
+<span class="hljs-keyword">class</span> TabTool : <span class="hljs-keyword">public</span> FExampleTabToolBase
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">virtual</span> ~TabTool () {}
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnStartupModule</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnShutdownModule</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Initialize</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-keyword">virtual</span> TSharedRef&lt;SDockTab&gt; SpawnTab(<span class="hljs-keyword">const</span> FSpawnTabArgs&amp; TabSpawnArgs) override;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">TabTool.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"TabToolPanel.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"TabTool.h"</span></span>
+
+<span class="hljs-keyword">void</span> TabTool::OnStartupModule()
+{
+    FExampleTabToolBase::OnStartupModule();
+    FToolExampleEditor::Get().AddMenuExtension(FMenuExtensionDelegate::CreateRaw(<span class="hljs-keyword">this</span>, &amp;TabTool::MakeMenuEntry), FName(<span class="hljs-string">"Section_2"</span>));
+}
+
+<span class="hljs-keyword">void</span> TabTool::OnShutdownModule()
+{
+    FExampleTabToolBase::OnShutdownModule();
+}
+
+<span class="hljs-keyword">void</span> TabTool::Initialize()
+{
+    TabName = <span class="hljs-string">"TabTool"</span>;
+    TabDisplayName = FText::FromString(<span class="hljs-string">"Tab Tool"</span>);
+    ToolTipText = FText::FromString(<span class="hljs-string">"Tab Tool Window"</span>);
+}
+
+TSharedRef&lt;SDockTab&gt; TabTool::SpawnTab(<span class="hljs-keyword">const</span> FSpawnTabArgs&amp; TabSpawnArgs)
+{
+    TSharedRef&lt;SDockTab&gt; SpawnedTab = SNew(SDockTab)
+        .TabRole(ETabRole::NomadTab)
+        [
+            SNew(TabToolPanel)
+            .Tool(SharedThis(<span class="hljs-keyword">this</span>))
+        ];
+
+    <span class="hljs-keyword">return</span> SpawnedTab;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now for the pannel:</p>
+</div>
+<div class="paragraph">
+<p>In the construct function we build the slate widget in <strong>ChildSlot</strong>. Here I’m add a scroll box, with a grey border inside, with a text box inside.</p>
+</div>
+<div class="listingblock">
+<div class="title">TabToolPanel.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SDockTab.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SDockableTab.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SDockTabStack.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SlateApplication.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"TabTool.h"</span></span>
+
+<span class="hljs-keyword">class</span> TabToolPanel : <span class="hljs-keyword">public</span> SCompoundWidget
+{
+    SLATE_BEGIN_ARGS(TabToolPanel)
+    {}
+    SLATE_ARGUMENT(TWeakPtr&lt;<span class="hljs-keyword">class</span> TabTool&gt;, Tool)
+    SLATE_END_ARGS()
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Construct</span><span class="hljs-params">(<span class="hljs-keyword">const</span> FArguments&amp; InArgs)</span></span>;
+
+<span class="hljs-keyword">protected</span>:
+    TWeakPtr&lt;TabTool&gt; tool;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">TabToolPanel.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"TabToolPanel.h"</span></span>
+
+<span class="hljs-keyword">void</span> TabToolPanel::Construct(<span class="hljs-keyword">const</span> FArguments&amp; InArgs)
+{
+    tool = InArgs._Tool;
+    <span class="hljs-keyword">if</span> (tool.IsValid())
+    {
+        <span class="hljs-comment">// do anything you need from tool object</span>
+    }
+
+    ChildSlot
+    [
+        SNew(SScrollBox)
+        + SScrollBox::Slot()
+        .VAlign(VAlign_Top)
+        .Padding(<span class="hljs-number">5</span>)
+        [
+            SNew(SBorder)
+            .BorderBackgroundColor(FColor(<span class="hljs-number">192</span>, <span class="hljs-number">192</span>, <span class="hljs-number">192</span>, <span class="hljs-number">255</span>))
+            .Padding(<span class="hljs-number">15.0f</span>)
+            [
+                SNew(STextBlock)
+                .Text(FText::FromString(TEXT(<span class="hljs-string">"This is a tab example."</span>)))
+            ]
+        ]
+    ];
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Finally remember to add this tool to editor module in <strong>FToolExampleEditor::AddModuleListeners</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">ModuleListeners.Add(MakeShareable(<span class="hljs-keyword">new</span> TabTool));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can see tab tool in our custom menu:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/009.png" alt="009.png" width="231">
+</div>
+</div>
+<div class="paragraph">
+<p>When you click on it, it will populate a window you can dock anywhere as regular Unreal tab.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/010.png" alt="010.png" width="436">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_customize_details_panel">Customize Details Panel</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Another commonly used feature is to customize the details panel for any UObject.</p>
+</div>
+<div class="paragraph">
+<p>To show how it works, we will create an Actor class first in our game module "ToolExample". Add the follow file:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/011.png" alt="011.png" width="235">
+</div>
+</div>
+<div class="paragraph">
+<p>In this class, we add 2 booleans in "Options" category, and an integer in "Test" category. Remember to add "<strong>TOOLEXAMPLE_API</strong>" in front of class name to export it from game module, otherwise we cannot use it in editor module.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleActor.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleActor.generated.h"</span></span>
+
+UCLASS()
+<span class="hljs-keyword">class</span> TOOLEXAMPLE_API AExampleActor : <span class="hljs-keyword">public</span> AActor
+{
+    GENERATED_BODY()
+<span class="hljs-keyword">public</span>:
+    UPROPERTY(EditAnywhere, Category = <span class="hljs-string">"Options"</span>)
+    <span class="hljs-keyword">bool</span> bOption1 = <span class="hljs-literal">false</span>;
+
+    UPROPERTY(EditAnywhere, Category = <span class="hljs-string">"Options"</span>)
+    <span class="hljs-keyword">bool</span> bOption2 = <span class="hljs-literal">false</span>;
+
+    UPROPERTY(EditAnywhere, Category = <span class="hljs-string">"Test"</span>)
+    <span class="hljs-keyword">int</span> testInt = <span class="hljs-number">0</span>;
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now if we load up Unreal and drag a "ExampleActor", you should see the following in the details panel:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/012.png" alt="012.png" width="269">
+</div>
+</div>
+<div class="paragraph">
+<p>If we want option 1 and option 2 to be mutually exclusive. You can have both unchecked or one of them checked, but you cannot have both checked. We want to customize this details panel, so if user check one of them, it will automatically uncheck the other.</p>
+</div>
+<div class="paragraph">
+<p>Add the following files to editor module "ToolExampleEditor":</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/013.png" alt="013.png" width="244">
+</div>
+</div>
+<div class="paragraph">
+<p>The details customization implements <strong>IDetailCustomization</strong> interface. In the main entry point <strong>CustomizeDetails</strong> function, we first hide original properties option 1 and option 2 (you can comment out those two lines and see how it works). Then we add our custom widget, here the "RadioButton" is purely a visual style, it has nothing to do with mutually exclusive logic. You can implement the same logic with other visuals like regular check box, buttons, etc.</p>
+</div>
+<div class="paragraph">
+<p>In the widget functions for check box, <strong>IsModeRadioChecked</strong> and <strong>OnModeRadioChanged</strong> we add extra parameters "actor" and "optionIndex", so we can pass in the editing object and specify option when we construct the widget.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleActorDetails.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"IDetailCustomization.h"</span></span>
+
+<span class="hljs-keyword">class</span> AExampleActor;
+
+<span class="hljs-keyword">class</span> FExampleActorDetails : <span class="hljs-keyword">public</span> IDetailCustomization
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-comment">/** Makes a new instance of this detail layout class for a specific detail view requesting it */</span>
+    <span class="hljs-keyword">static</span> TSharedRef&lt;IDetailCustomization&gt; MakeInstance();
+
+    <span class="hljs-comment">/** IDetailCustomization interface */</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CustomizeDetails</span><span class="hljs-params">(IDetailLayoutBuilder&amp; DetailLayout)</span> override</span>;
+
+<span class="hljs-keyword">protected</span>:
+    <span class="hljs-comment">// widget functions</span>
+    <span class="hljs-function">ECheckBoxState <span class="hljs-title">IsModeRadioChecked</span><span class="hljs-params">(AExampleActor* actor, <span class="hljs-keyword">int</span> optionIndex)</span> <span class="hljs-keyword">const</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">OnModeRadioChanged</span><span class="hljs-params">(ECheckBoxState CheckType, AExampleActor* actor, <span class="hljs-keyword">int</span> optionIndex)</span></span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleActorDetails.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleActorDetails.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"DetailsCustomization/ExampleActor.h"</span></span>
+
+TSharedRef&lt;IDetailCustomization&gt; FExampleActorDetails::MakeInstance()
+{
+    <span class="hljs-keyword">return</span> MakeShareable(<span class="hljs-keyword">new</span> FExampleActorDetails);
+}
+
+<span class="hljs-keyword">void</span> FExampleActorDetails::CustomizeDetails(IDetailLayoutBuilder&amp; DetailLayout)
+{
+    TArray&lt;TWeakObjectPtr&lt;UObject&gt;&gt; Objects;
+    DetailLayout.GetObjectsBeingCustomized(Objects);
+    <span class="hljs-keyword">if</span> (Objects.Num() != <span class="hljs-number">1</span>)
+    {
+        <span class="hljs-comment">// skip customization if select more than one objects</span>
+        <span class="hljs-keyword">return</span>;
+    }
+    AExampleActor* actor = (AExampleActor*)Objects[<span class="hljs-number">0</span>].Get();
+
+    <span class="hljs-comment">// hide original property</span>
+    DetailLayout.HideProperty(DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(AExampleActor, bOption1)));
+    DetailLayout.HideProperty(DetailLayout.GetProperty(GET_MEMBER_NAME_CHECKED(AExampleActor, bOption2)));
+
+    <span class="hljs-comment">// add custom widget to "Options" category</span>
+    IDetailCategoryBuilder&amp; OptionsCategory = DetailLayout.EditCategory(<span class="hljs-string">"Options"</span>, FText::FromString(<span class="hljs-string">""</span>), ECategoryPriority::Important);
+    OptionsCategory.AddCustomRow(FText::FromString(<span class="hljs-string">"Options"</span>))
+                .WholeRowContent()
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(SCheckBox)
+                        .Style(FEditorStyle::Get(), <span class="hljs-string">"RadioButton"</span>)
+                        .IsChecked(<span class="hljs-keyword">this</span>, &amp;FExampleActorDetails::IsModeRadioChecked, actor, <span class="hljs-number">1</span>)
+                        .OnCheckStateChanged(<span class="hljs-keyword">this</span>, &amp;FExampleActorDetails::OnModeRadioChanged, actor, <span class="hljs-number">1</span>)
+                        [
+                            SNew(STextBlock).Text(FText::FromString(<span class="hljs-string">"Option 1"</span>))
+                        ]
+                    ]
+                    + SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .Padding(<span class="hljs-number">10.f</span>, <span class="hljs-number">0.f</span>, <span class="hljs-number">0.f</span>, <span class="hljs-number">0.f</span>)
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(SCheckBox)
+                        .Style(FEditorStyle::Get(), <span class="hljs-string">"RadioButton"</span>)
+                        .IsChecked(<span class="hljs-keyword">this</span>, &amp;FExampleActorDetails::IsModeRadioChecked, actor, <span class="hljs-number">2</span>)
+                        .OnCheckStateChanged(<span class="hljs-keyword">this</span>, &amp;FExampleActorDetails::OnModeRadioChanged, actor, <span class="hljs-number">2</span>)
+                        [
+                            SNew(STextBlock).Text(FText::FromString(<span class="hljs-string">"Option 2"</span>))
+                        ]
+                    ]
+                ];
+}
+
+ECheckBoxState FExampleActorDetails::IsModeRadioChecked(AExampleActor* actor, <span class="hljs-keyword">int</span> optionIndex) <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">bool</span> bFlag = <span class="hljs-literal">false</span>;
+    <span class="hljs-keyword">if</span> (actor)
+    {
+        <span class="hljs-keyword">if</span> (optionIndex == <span class="hljs-number">1</span>)
+            bFlag = actor-&gt;bOption1;
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (optionIndex == <span class="hljs-number">2</span>)
+            bFlag = actor-&gt;bOption2;
+    }
+    <span class="hljs-keyword">return</span> bFlag ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
+}
+
+<span class="hljs-keyword">void</span> FExampleActorDetails::OnModeRadioChanged(ECheckBoxState CheckType, AExampleActor* actor, <span class="hljs-keyword">int</span> optionIndex)
+{
+    <span class="hljs-keyword">bool</span> bFlag = (CheckType == ECheckBoxState::Checked);
+    <span class="hljs-keyword">if</span> (actor)
+    {
+        actor-&gt;Modify();
+        <span class="hljs-keyword">if</span> (bFlag)
+        {
+            <span class="hljs-comment">// clear all options first</span>
+            actor-&gt;bOption1 = <span class="hljs-literal">false</span>;
+            actor-&gt;bOption2 = <span class="hljs-literal">false</span>;
+        }
+        <span class="hljs-keyword">if</span> (optionIndex == <span class="hljs-number">1</span>)
+            actor-&gt;bOption1 = bFlag;
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (optionIndex == <span class="hljs-number">2</span>)
+            actor-&gt;bOption2 = bFlag;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then we need to register the layout in <strong>FToolExampleEditor::StartupModule</strong> and unregister it in <strong>FToolExampleEditor::ShutdownModule</strong></p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"DetailsCustomization/ExampleActor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"DetailsCustomization/ExampleActorDetails.h"</span></span>
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::StartupModule()
+{
+    ...
+
+    <span class="hljs-comment">// register custom layouts</span>
+    {
+        <span class="hljs-function"><span class="hljs-keyword">static</span> FName <span class="hljs-title">PropertyEditor</span><span class="hljs-params">(<span class="hljs-string">"PropertyEditor"</span>)</span></span>;
+        FPropertyEditorModule&amp; PropertyModule = FModuleManager::GetModuleChecked&lt;FPropertyEditorModule&gt;(PropertyEditor);
+        PropertyModule.RegisterCustomClassLayout(AExampleActor::StaticClass()-&gt;GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&amp;FExampleActorDetails::MakeInstance));
+    }
+
+    IExampleModuleInterface::StartupModule();
+}
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::ShutdownModule()
+{
+    <span class="hljs-comment">// unregister custom layouts</span>
+    <span class="hljs-keyword">if</span> (FModuleManager::Get().IsModuleLoaded(<span class="hljs-string">"PropertyEditor"</span>))
+    {
+        FPropertyEditorModule&amp; PropertyModule = FModuleManager::GetModuleChecked&lt;FPropertyEditorModule&gt;(<span class="hljs-string">"PropertyEditor"</span>);
+        PropertyModule.UnregisterCustomClassLayout(AExampleActor::StaticClass()-&gt;GetFName());
+    }
+
+    IExampleModuleInterface::ShutdownModule();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you should see the customized details panel:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/014.png" alt="014.png" width="271">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_custom_data_type">Custom Data Type</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_new_custom_data">New Custom Data</h3>
+<div class="paragraph">
+<p>For simple data, you can just inherit from <strong>UDataAsset</strong> class, then you can create your data object in Unreal content browser: Add New → miscellaneous → Data Asset</p>
+</div>
+<div class="paragraph">
+<p>If you want to add you data to a custom category, you need to do a bit more work.</p>
+</div>
+<div class="paragraph">
+<p>First we need to create a custom data type in game module (ExampleTool). We will make one with only one property.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/015.png" alt="015.png" width="236">
+</div>
+</div>
+<div class="paragraph">
+<p>We add "SourceFilePath" for future sections.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleData.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleData.generated.h"</span></span>
+
+UCLASS(Blueprintable)
+<span class="hljs-keyword">class</span> UExampleData : <span class="hljs-keyword">public</span> UObject
+{
+    GENERATED_BODY()
+
+<span class="hljs-keyword">public</span>:
+    UPROPERTY(EditAnywhere, Category = <span class="hljs-string">"Properties"</span>)
+    FString ExampleString;
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">if</span> WITH_EDITORONLY_DATA</span>
+    UPROPERTY(Category = SourceAsset, VisibleAnywhere)
+    FString SourceFilePath;
+<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span></span>
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then in editor module, add the following files:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/016.png" alt="016.png" width="380">
+</div>
+</div>
+<div class="paragraph">
+<p>We first make the factory:</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataFactory.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"UnrealEd.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleDataFactory.generated.h"</span></span>
+
+UCLASS()
+<span class="hljs-keyword">class</span> UExampleDataFactory : <span class="hljs-keyword">public</span> UFactory
+{
+    GENERATED_UCLASS_BODY()
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> UObject* <span class="hljs-title">FactoryCreateNew</span><span class="hljs-params">(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)</span> override</span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataFactory.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleDataFactory.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"CustomDataType/ExampleData.h"</span></span>
+
+UExampleDataFactory::UExampleDataFactory(<span class="hljs-keyword">const</span> FObjectInitializer&amp; ObjectInitializer) : Super(ObjectInitializer)
+{
+    SupportedClass = UExampleData::StaticClass();
+    bCreateNew = <span class="hljs-literal">true</span>;
+    bEditAfterNew = <span class="hljs-literal">true</span>;
+}
+
+UObject* UExampleDataFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
+{
+    UExampleData* NewObjectAsset = NewObject&lt;UExampleData&gt;(InParent, Class, Name, Flags | RF_Transactional);
+    <span class="hljs-keyword">return</span> NewObjectAsset;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then we make type actions, here we will pass in the asset category.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataTypeActions.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"AssetTypeActions_Base.h"</span></span>
+
+<span class="hljs-keyword">class</span> FExampleDataTypeActions : <span class="hljs-keyword">public</span> FAssetTypeActions_Base
+{
+<span class="hljs-keyword">public</span>:
+    FExampleDataTypeActions(EAssetTypeCategories::Type InAssetCategory);
+
+    <span class="hljs-comment">// IAssetTypeActions interface</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> FText <span class="hljs-title">GetName</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> FColor <span class="hljs-title">GetTypeColor</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> UClass* <span class="hljs-title">GetSupportedClass</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> uint32 <span class="hljs-title">GetCategories</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-comment">// End of IAssetTypeActions interface</span>
+
+<span class="hljs-keyword">private</span>:
+    EAssetTypeCategories::Type MyAssetCategory;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataTypeActions.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleDataTypeActions.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"CustomDataType/ExampleData.h"</span></span>
+
+FExampleDataTypeActions::FExampleDataTypeActions(EAssetTypeCategories::Type InAssetCategory)
+    : MyAssetCategory(InAssetCategory)
+{
+}
+
+FText FExampleDataTypeActions::GetName() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> FText::FromString(<span class="hljs-string">"Example Data"</span>);
+}
+
+FColor FExampleDataTypeActions::GetTypeColor() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> FColor(<span class="hljs-number">230</span>, <span class="hljs-number">205</span>, <span class="hljs-number">165</span>);
+}
+
+UClass* FExampleDataTypeActions::GetSupportedClass() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> UExampleData::StaticClass();
+}
+
+uint32 FExampleDataTypeActions::GetCategories()
+{
+    <span class="hljs-keyword">return</span> MyAssetCategory;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Finally we need to register type actions in editor module. We add an array <strong>CreatedAssetTypeActions</strong> to save all type actions we registered, so we can unregister them properly when module is unloaded:</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">class</span> FToolExampleEditor : <span class="hljs-keyword">public</span> IExampleModuleInterface
+{
+    ...
+    TArray&lt;TSharedPtr&lt;IAssetTypeActions&gt;&gt; CreatedAssetTypeActions;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In <strong>StartupModule</strong> function, we create a new "<strong>Example</strong>" category, and use that to register our type action.</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"CustomDataType/ExampleDataTypeActions.h"</span></span>
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::StartupModule()
+{
+    ...
+
+    <span class="hljs-comment">// register custom types:</span>
+    {
+        IAssetTools&amp; AssetTools = FModuleManager::LoadModuleChecked&lt;FAssetToolsModule&gt;(<span class="hljs-string">"AssetTools"</span>).Get();
+        <span class="hljs-comment">// add custom category</span>
+        EAssetTypeCategories::Type ExampleCategory = AssetTools.RegisterAdvancedAssetCategory(FName(TEXT(<span class="hljs-string">"Example"</span>)), FText::FromString(<span class="hljs-string">"Example"</span>));
+        <span class="hljs-comment">// register our custom asset with example category</span>
+        TSharedPtr&lt;IAssetTypeActions&gt; Action = MakeShareable(<span class="hljs-keyword">new</span> FExampleDataTypeActions(ExampleCategory));
+        AssetTools.RegisterAssetTypeActions(Action.ToSharedRef());
+        <span class="hljs-comment">// saved it here for unregister later</span>
+        CreatedAssetTypeActions.Add(Action);
+    }
+
+    IExampleModuleInterface::StartupModule();
+}
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::ShutdownModule()
+{
+    ...
+
+    <span class="hljs-comment">// Unregister all the asset types that we registered</span>
+    <span class="hljs-keyword">if</span> (FModuleManager::Get().IsModuleLoaded(<span class="hljs-string">"AssetTools"</span>))
+    {
+        IAssetTools&amp; AssetTools = FModuleManager::GetModuleChecked&lt;FAssetToolsModule&gt;(<span class="hljs-string">"AssetTools"</span>).Get();
+        <span class="hljs-keyword">for</span> (int32 i = <span class="hljs-number">0</span>; i &lt; CreatedAssetTypeActions.Num(); ++i)
+        {
+            AssetTools.UnregisterAssetTypeActions(CreatedAssetTypeActions[i].ToSharedRef());
+        }
+    }
+    CreatedAssetTypeActions.Empty();
+
+    IExampleModuleInterface::ShutdownModule();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you will see your data in proper category.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/017.png" alt="017.png" width="380">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_import_custom_data">Import Custom Data</h3>
+<div class="paragraph">
+<p>For all the hard work we did above, we can now our data from a file, like the way you can drag and drop an PNG file to create a texture. In this case we will have a text file, with extension ".xmp", to be imported into unreal, and we just set the text from the file to "ExampleString" property.</p>
+</div>
+<div class="paragraph">
+<p>To make it work with import, we actually have to disable the ability to be able to create a new data from scratch. Modify factory class as following:</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataFactory.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">class</span> UExampleDataFactory : <span class="hljs-keyword">public</span> UFactory
+{
+    ...
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> UObject* <span class="hljs-title">FactoryCreateText</span><span class="hljs-params">(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, <span class="hljs-keyword">const</span> TCHAR* Type, <span class="hljs-keyword">const</span> TCHAR*&amp; Buffer, <span class="hljs-keyword">const</span> TCHAR* BufferEnd, FFeedbackContext* Warn)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">FactoryCanImport</span><span class="hljs-params">(<span class="hljs-keyword">const</span> FString&amp; Filename)</span> override</span>;
+
+    <span class="hljs-comment">// helper function</span>
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MakeExampleDataFromText</span><span class="hljs-params">(<span class="hljs-keyword">class</span> UExampleData* Data, <span class="hljs-keyword">const</span> TCHAR*&amp; Buffer, <span class="hljs-keyword">const</span> TCHAR* BufferEnd)</span></span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataFactory.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">UExampleDataFactory::UExampleDataFactory(<span class="hljs-keyword">const</span> FObjectInitializer&amp; ObjectInitializer) : Super(ObjectInitializer)
+{
+    Formats.Add(TEXT(<span class="hljs-string">"xmp;Example Data"</span>));
+    SupportedClass = UExampleData::StaticClass();
+    bCreateNew = <span class="hljs-literal">false</span>; <span class="hljs-comment">// turned off for import</span>
+    bEditAfterNew = <span class="hljs-literal">false</span>; <span class="hljs-comment">// turned off for import</span>
+    bEditorImport = <span class="hljs-literal">true</span>;
+    bText = <span class="hljs-literal">true</span>;
+}
+
+
+UObject* UExampleDataFactory::FactoryCreateText(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, <span class="hljs-keyword">const</span> TCHAR* Type, <span class="hljs-keyword">const</span> TCHAR*&amp; Buffer, <span class="hljs-keyword">const</span> TCHAR* BufferEnd, FFeedbackContext* Warn)
+{
+    FEditorDelegates::OnAssetPreImport.Broadcast(<span class="hljs-keyword">this</span>, InClass, InParent, InName, Type);
+
+    <span class="hljs-comment">// if class type or extension doesn't match, return</span>
+    <span class="hljs-keyword">if</span> (InClass != UExampleData::StaticClass() ||
+        FCString::Stricmp(Type, TEXT(<span class="hljs-string">"xmp"</span>)) != <span class="hljs-number">0</span>)
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nullptr</span>;
+
+    UExampleData* Data = CastChecked&lt;UExampleData&gt;(NewObject&lt;UExampleData&gt;(InParent, InName, Flags));
+    MakeExampleDataFromText(Data, Buffer, BufferEnd);
+
+    <span class="hljs-comment">// save the source file path</span>
+    Data-&gt;SourceFilePath = UAssetImportData::SanitizeImportFilename(CurrentFilename, Data-&gt;GetOutermost());
+
+    FEditorDelegates::OnAssetPostImport.Broadcast(<span class="hljs-keyword">this</span>, Data);
+
+    <span class="hljs-keyword">return</span> Data;
+}
+
+<span class="hljs-keyword">bool</span> UExampleDataFactory::FactoryCanImport(<span class="hljs-keyword">const</span> FString&amp; Filename)
+{
+    <span class="hljs-keyword">return</span> FPaths::GetExtension(Filename).Equals(TEXT(<span class="hljs-string">"xmp"</span>));
+}
+
+<span class="hljs-keyword">void</span> UExampleDataFactory::MakeExampleDataFromText(<span class="hljs-keyword">class</span> UExampleData* Data, <span class="hljs-keyword">const</span> TCHAR*&amp; Buffer, <span class="hljs-keyword">const</span> TCHAR* BufferEnd)
+{
+    Data-&gt;ExampleString = Buffer;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note we changed <strong>bCreateNew</strong> and <strong>bEditAfterNew</strong> to false. We set "<strong>SourceFilePath</strong>" so we can do reimport later. If you want to import binary file, set <strong>bText = false</strong>, and override <strong>FactoryCreateBinary</strong> function instead.</p>
+</div>
+<div class="paragraph">
+<p>Now you can drag &amp; drop a xmp file and have the content imported automatically.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/018.png" alt="018.png" width="789">
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to have custom editor for the data, you can follow "Customize Details Panel" section to create custom widget. Or you can override <strong>OpenAssetEditor</strong> function in <strong>ExampleDataTypeActions</strong>, to create a complete different editor. We are not going to dive in here, search "<strong>OpenAssetEditor</strong>" in Unreal engine for examples.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_reimport">Reimport</h3>
+<div class="paragraph">
+<p>To reimport a file, we need to implement a different factory class. The implementation should be straight forward.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/019.png" alt="019.png" width="299">
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ReimportExampleDataFactory.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleDataFactory.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ReimportExampleDataFactory.generated.h"</span></span>
+
+UCLASS()
+<span class="hljs-keyword">class</span> UReimportExampleDataFactory : <span class="hljs-keyword">public</span> UExampleDataFactory, <span class="hljs-keyword">public</span> FReimportHandler
+{
+    GENERATED_BODY()
+
+    <span class="hljs-comment">// Begin FReimportHandler interface</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">CanReimport</span><span class="hljs-params">(UObject* Obj, TArray&lt;FString&gt;&amp; OutFilenames)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SetReimportPaths</span><span class="hljs-params">(UObject* Obj, <span class="hljs-keyword">const</span> TArray&lt;FString&gt;&amp; NewReimportPaths)</span> override</span>;
+    <span class="hljs-keyword">virtual</span> EReimportResult::<span class="hljs-function">Type <span class="hljs-title">Reimport</span><span class="hljs-params">(UObject* Obj)</span> override</span>;
+    <span class="hljs-comment">// End FReimportHandler interface</span>
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ReimportExampleDataFactory.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ReimportExampleDataFactory.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleDataFactory.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"CustomDataType/ExampleData.h"</span></span>
+
+<span class="hljs-keyword">bool</span> UReimportExampleDataFactory::CanReimport(UObject* Obj, TArray&lt;FString&gt;&amp; OutFilenames)
+{
+    UExampleData* ExampleData = Cast&lt;UExampleData&gt;(Obj);
+    <span class="hljs-keyword">if</span> (ExampleData)
+    {
+        OutFilenames.Add(UAssetImportData::ResolveImportFilename(ExampleData-&gt;SourceFilePath, ExampleData-&gt;GetOutermost()));
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+}
+
+<span class="hljs-keyword">void</span> UReimportExampleDataFactory::SetReimportPaths(UObject* Obj, <span class="hljs-keyword">const</span> TArray&lt;FString&gt;&amp; NewReimportPaths)
+{
+    UExampleData* ExampleData = Cast&lt;UExampleData&gt;(Obj);
+    <span class="hljs-keyword">if</span> (ExampleData &amp;&amp; ensure(NewReimportPaths.Num() == <span class="hljs-number">1</span>))
+    {
+        ExampleData-&gt;SourceFilePath = UAssetImportData::SanitizeImportFilename(NewReimportPaths[<span class="hljs-number">0</span>], ExampleData-&gt;GetOutermost());
+    }
+}
+
+EReimportResult::Type UReimportExampleDataFactory::Reimport(UObject* Obj)
+{
+    UExampleData* ExampleData = Cast&lt;UExampleData&gt;(Obj);
+    <span class="hljs-keyword">if</span> (!ExampleData)
+    {
+        <span class="hljs-keyword">return</span> EReimportResult::Failed;
+    }
+
+    <span class="hljs-keyword">const</span> FString Filename = UAssetImportData::ResolveImportFilename(ExampleData-&gt;SourceFilePath, ExampleData-&gt;GetOutermost());
+    <span class="hljs-keyword">if</span> (!FPaths::GetExtension(Filename).Equals(TEXT(<span class="hljs-string">"xmp"</span>)))
+    {
+        <span class="hljs-keyword">return</span> EReimportResult::Failed;
+    }
+
+    CurrentFilename = Filename;
+    FString Data;
+    <span class="hljs-keyword">if</span> (FFileHelper::LoadFileToString(Data, *CurrentFilename))
+    {
+        <span class="hljs-keyword">const</span> TCHAR* Ptr = *Data;
+        ExampleData-&gt;Modify();
+        ExampleData-&gt;MarkPackageDirty();
+
+        UExampleDataFactory::MakeExampleDataFromText(ExampleData, Ptr, Ptr + Data.Len());
+
+        <span class="hljs-comment">// save the source file path and timestamp</span>
+        ExampleData-&gt;SourceFilePath = UAssetImportData::SanitizeImportFilename(CurrentFilename, ExampleData-&gt;GetOutermost());
+    }
+
+    <span class="hljs-keyword">return</span> EReimportResult::Succeeded;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And just for fun, let’s add "<strong>Reimport</strong>" to right click menu on this asset. This is also an example for how to add more actions on specific asset type. Modify <strong>ExampleDataTypeActions</strong> class:</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataTypeActions.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">class</span> FExampleDataTypeActions : <span class="hljs-keyword">public</span> FAssetTypeActions_Base
+{
+<span class="hljs-keyword">public</span>:
+    ...
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">HasActions</span><span class="hljs-params">(<span class="hljs-keyword">const</span> TArray&lt;UObject*&gt;&amp; InObjects)</span> <span class="hljs-keyword">const</span> override </span>{ <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>; }
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">GetActions</span><span class="hljs-params">(<span class="hljs-keyword">const</span> TArray&lt;UObject*&gt;&amp; InObjects, FMenuBuilder&amp; MenuBuilder)</span> override</span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ExecuteReimport</span><span class="hljs-params">(TArray&lt;TWeakObjectPtr&lt;UExampleData&gt;&gt; Objects)</span></span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleDataTypeActions.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">void</span> FExampleDataTypeActions::GetActions(<span class="hljs-keyword">const</span> TArray&lt;UObject*&gt;&amp; InObjects, FMenuBuilder&amp; MenuBuilder)
+{
+    <span class="hljs-keyword">auto</span> ExampleDataImports = GetTypedWeakObjectPtrs&lt;UExampleData&gt;(InObjects);
+
+    MenuBuilder.AddMenuEntry(
+        FText::FromString(<span class="hljs-string">"Reimport"</span>),
+        FText::FromString(<span class="hljs-string">"Reimports example data."</span>),
+        FSlateIcon(),
+        FUIAction(
+            FExecuteAction::CreateSP(<span class="hljs-keyword">this</span>, &amp;FExampleDataTypeActions::ExecuteReimport, ExampleDataImports),
+            FCanExecuteAction()
+        )
+    );
+}
+
+<span class="hljs-keyword">void</span> FExampleDataTypeActions::ExecuteReimport(TArray&lt;TWeakObjectPtr&lt;UExampleData&gt;&gt; Objects)
+{
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> ObjIt = Objects.CreateConstIterator(); ObjIt; ++ObjIt)
+    {
+        <span class="hljs-keyword">auto</span> Object = (*ObjIt).Get();
+        <span class="hljs-keyword">if</span> (Object)
+        {
+            FReimportManager::Instance()-&gt;Reimport(Object, <span class="hljs-comment">/*bAskForNewFileIfMissing=*/</span><span class="hljs-literal">true</span>);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can reimport your custom files.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/020.png" alt="020.png" width="405">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_custom_editor_mode">Custom Editor Mode</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Editor Mode is probably the most powerful tool framework in Unreal. You will get and react to all user input; you can render to viewport; you can monitor any change in the scene and get Undo/Redo events. Remember you can enter a mode and paint foliage over objects? You can do the same degree of stuff in custom editor mode. Editor Mode has dedicated section in UI layout, and you can customize the widget here as well.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/021.png" alt="021.png" width="480">
+</div>
+</div>
+<div class="paragraph">
+<p>Here as an example, we will create an editor mode to do a simple task. We have an actor "ExampleTargetPoint" inherit from "TargetPoint", with a list of locations. In this editor mode we want to visualize those points. You can create new points or delete points. You can also move points around as moving normal objects. Note this is not the best way for this functionality (you can use MakeEditWidget in UPROPERTY to do this easily), but rather as a way to demonstrate how to set it up and what you can potentially do.</p>
+</div>
+<div class="sect2">
+<h3 id="_setup_editor_mode">Setup Editor Mode</h3>
+<div class="paragraph">
+<p>First we need to create an icon for our editor mode. We make an 40x40 PNG file as \Content\EditorResources\IconExampleEditorMode.png</p>
+</div>
+<div class="paragraph">
+<p>Then add the following files in editor module:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/022.png" alt="022.png" width="251">
+</div>
+</div>
+<div class="paragraph">
+<p><strong>SExampleEdModeWidget</strong> is the widget we use in "Modes" panel. Here we will just create a simple one for now. We also include a commonly used util function to get EdMode object.</p>
+</div>
+<div class="listingblock">
+<div class="title">SExampleEdModeWidget.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SlateApplication.h"</span></span>
+
+<span class="hljs-keyword">class</span> SExampleEdModeWidget : <span class="hljs-keyword">public</span> SCompoundWidget
+{
+<span class="hljs-keyword">public</span>:
+    SLATE_BEGIN_ARGS(SExampleEdModeWidget) {}
+    SLATE_END_ARGS();
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Construct</span><span class="hljs-params">(<span class="hljs-keyword">const</span> FArguments&amp; InArgs)</span></span>;
+
+    <span class="hljs-comment">// Util Functions</span>
+    <span class="hljs-function"><span class="hljs-keyword">class</span> FExampleEdMode* <span class="hljs-title">GetEdMode</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">SExampleEdModeWidget.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleEdMode.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SExampleEdModeWidget.h"</span></span>
+
+<span class="hljs-keyword">void</span> SExampleEdModeWidget::Construct(<span class="hljs-keyword">const</span> FArguments&amp; InArgs)
+{
+    ChildSlot
+    [
+        SNew(SScrollBox)
+        + SScrollBox::Slot()
+        .VAlign(VAlign_Top)
+        .Padding(<span class="hljs-number">5.f</span>)
+        [
+            SNew(STextBlock)
+            .Text(FText::FromString(TEXT(<span class="hljs-string">"This is a editor mode example."</span>)))
+        ]
+    ];
+}
+
+FExampleEdMode* SExampleEdModeWidget::GetEdMode() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> (FExampleEdMode*)GLevelEditorModeTools().GetActiveMode(FExampleEdMode::EM_Example);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>ExampleEdModeToolkit</strong> is a middle layer between EdMode and its widget:</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdModeToolkit.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"BaseToolkit.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleEdMode.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"SExampleEdModeWidget.h"</span></span>
+
+<span class="hljs-keyword">class</span> FExampleEdModeToolkit: <span class="hljs-keyword">public</span> FModeToolkit
+{
+<span class="hljs-keyword">public</span>:
+    FExampleEdModeToolkit()
+    {
+        SAssignNew(ExampleEdModeWidget, SExampleEdModeWidget);
+    }
+
+    <span class="hljs-comment">/** IToolkit interface */</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> FName <span class="hljs-title">GetToolkitFName</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override </span>{ <span class="hljs-keyword">return</span> FName(<span class="hljs-string">"ExampleEdMode"</span>); }
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> FText <span class="hljs-title">GetBaseToolkitName</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override </span>{ <span class="hljs-keyword">return</span> NSLOCTEXT(<span class="hljs-string">"BuilderModeToolkit"</span>, <span class="hljs-string">"DisplayName"</span>, <span class="hljs-string">"Builder"</span>); }
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">class</span> FEdMode* <span class="hljs-title">GetEditorMode</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override </span>{ <span class="hljs-keyword">return</span> GLevelEditorModeTools().GetActiveMode(FExampleEdMode::EM_Example); }
+    <span class="hljs-keyword">virtual</span> TSharedPtr&lt;<span class="hljs-keyword">class</span> SWidget&gt; GetInlineContent() <span class="hljs-keyword">const</span> override { <span class="hljs-keyword">return</span> ExampleEdModeWidget; }
+
+<span class="hljs-keyword">private</span>:
+    TSharedPtr&lt;SExampleEdModeWidget&gt; ExampleEdModeWidget;
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then for the main class <strong>ExampleEdMode</strong>. Since we are only try to set it up, we will leave it mostly empty, only setting up its ID and create toolkit object. We will fill it in heavily in the next section.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"EditorModes.h"</span></span>
+
+<span class="hljs-keyword">class</span> FExampleEdMode : <span class="hljs-keyword">public</span> FEdMode
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">const</span> <span class="hljs-keyword">static</span> FEditorModeID EM_Example;
+
+    <span class="hljs-comment">// FEdMode interface</span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Enter</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Exit</span><span class="hljs-params">()</span> override</span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Editor/UnrealEd/Public/Toolkits/ToolkitManager.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ScopedTransaction.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleEdModeToolkit.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleEdMode.h"</span></span>
+
+<span class="hljs-keyword">const</span> FEditorModeID FExampleEdMode::EM_Example(TEXT(<span class="hljs-string">"EM_Example"</span>));
+
+<span class="hljs-keyword">void</span> FExampleEdMode::Enter()
+{
+    FEdMode::Enter();
+
+    <span class="hljs-keyword">if</span> (!Toolkit.IsValid())
+    {
+        Toolkit = MakeShareable(<span class="hljs-keyword">new</span> FExampleEdModeToolkit);
+        Toolkit-&gt;Init(Owner-&gt;GetToolkitHost());
+    }
+}
+
+<span class="hljs-keyword">void</span> FExampleEdMode::Exit()
+{
+    FToolkitManager::Get().CloseToolkit(Toolkit.ToSharedRef());
+    Toolkit.Reset();
+
+    FEdMode::Exit();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As other tools, we need a tool class to handle registration. Here we need to register both editor mode and its icon.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdModeTool.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ExampleTabToolBase.h"</span></span>
+
+<span class="hljs-keyword">class</span> ExampleEdModeTool : <span class="hljs-keyword">public</span> FExampleTabToolBase
+{
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnStartupModule</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnShutdownModule</span><span class="hljs-params">()</span> override</span>;
+
+    <span class="hljs-keyword">virtual</span> ~ExampleEdModeTool() {}
+<span class="hljs-keyword">private</span>:
+    <span class="hljs-keyword">static</span> TSharedPtr&lt; <span class="hljs-keyword">class</span> FSlateStyleSet &gt; StyleSet;
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">RegisterStyleSet</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">UnregisterStyleSet</span><span class="hljs-params">()</span></span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">RegisterEditorMode</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">UnregisterEditorMode</span><span class="hljs-params">()</span></span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdModeTool.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ToolExampleEditor/ToolExampleEditor.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleEdModeTool.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleEdMode.h"</span></span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> IMAGE_BRUSH(RelativePath, ...) FSlateImageBrush(StyleSet-&gt;RootToContentDir(RelativePath, TEXT(<span class="hljs-meta-string">".png"</span>)), __VA_ARGS__)</span>
+
+TSharedPtr&lt; FSlateStyleSet &gt; ExampleEdModeTool::StyleSet = <span class="hljs-literal">nullptr</span>;
+
+<span class="hljs-keyword">void</span> ExampleEdModeTool::OnStartupModule()
+{
+    RegisterStyleSet();
+    RegisterEditorMode();
+}
+
+<span class="hljs-keyword">void</span> ExampleEdModeTool::OnShutdownModule()
+{
+    UnregisterStyleSet();
+    UnregisterEditorMode();
+}
+
+<span class="hljs-keyword">void</span> ExampleEdModeTool::RegisterStyleSet()
+{
+    <span class="hljs-comment">// Const icon sizes</span>
+    <span class="hljs-function"><span class="hljs-keyword">const</span> FVector2D <span class="hljs-title">Icon20x20</span><span class="hljs-params">(<span class="hljs-number">20.0f</span>, <span class="hljs-number">20.0f</span>)</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">const</span> FVector2D <span class="hljs-title">Icon40x40</span><span class="hljs-params">(<span class="hljs-number">40.0f</span>, <span class="hljs-number">40.0f</span>)</span></span>;
+
+    <span class="hljs-comment">// Only register once</span>
+    <span class="hljs-keyword">if</span> (StyleSet.IsValid())
+    {
+        <span class="hljs-keyword">return</span>;
+    }
+
+    StyleSet = MakeShareable(<span class="hljs-keyword">new</span> FSlateStyleSet(<span class="hljs-string">"ExampleEdModeToolStyle"</span>));
+    StyleSet-&gt;SetContentRoot(FPaths::GameDir() / TEXT(<span class="hljs-string">"Content/EditorResources"</span>));
+    StyleSet-&gt;SetCoreContentRoot(FPaths::GameDir() / TEXT(<span class="hljs-string">"Content/EditorResources"</span>));
+
+    <span class="hljs-comment">// Spline editor</span>
+    {
+        StyleSet-&gt;Set(<span class="hljs-string">"ExampleEdMode"</span>, <span class="hljs-keyword">new</span> IMAGE_BRUSH(TEXT(<span class="hljs-string">"IconExampleEditorMode"</span>), Icon40x40));
+        StyleSet-&gt;Set(<span class="hljs-string">"ExampleEdMode.Small"</span>, <span class="hljs-keyword">new</span> IMAGE_BRUSH(TEXT(<span class="hljs-string">"IconExampleEditorMode"</span>), Icon20x20));
+    }
+
+    FSlateStyleRegistry::RegisterSlateStyle(*StyleSet.Get());
+}
+
+<span class="hljs-keyword">void</span> ExampleEdModeTool::UnregisterStyleSet()
+{
+    <span class="hljs-keyword">if</span> (StyleSet.IsValid())
+    {
+        FSlateStyleRegistry::UnRegisterSlateStyle(*StyleSet.Get());
+        ensure(StyleSet.IsUnique());
+        StyleSet.Reset();
+    }
+}
+
+<span class="hljs-keyword">void</span> ExampleEdModeTool::RegisterEditorMode()
+{
+    FEditorModeRegistry::Get().RegisterMode&lt;FExampleEdMode&gt;(
+        FExampleEdMode::EM_Example,
+        FText::FromString(<span class="hljs-string">"Example Editor Mode"</span>),
+        FSlateIcon(StyleSet-&gt;GetStyleSetName(), <span class="hljs-string">"ExampleEdMode"</span>, <span class="hljs-string">"ExampleEdMode.Small"</span>),
+        <span class="hljs-literal">true</span>, <span class="hljs-number">500</span>
+        );
+}
+
+<span class="hljs-keyword">void</span> ExampleEdModeTool::UnregisterEditorMode()
+{
+    FEditorModeRegistry::Get().UnregisterMode(FExampleEdMode::EM_Example);
+}
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">undef</span> IMAGE_BRUSH</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Finally as usual, we add the tool to editor module <strong>FToolExampleEditor::AddModuleListeners</strong>:</p>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">ModuleListeners.Add(MakeShareable(<span class="hljs-keyword">new</span> ExampleEdModeTool));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you should see our custom editor mode show up in "Modes" panel.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/023.png" alt="023.png" width="457">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_render_and_click">Render and Click</h3>
+<div class="paragraph">
+<p>With the basic framework ready, we can actually start implementing tool logic. First we make <strong>ExampleTargetPoint</strong> class in game module. This actor holds points data, and is what our tool will be operating on. Again remember to export the class with <strong>TOOLEXAMPLE_API</strong>.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/024.png" alt="024.png" width="222">
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleTargetPoint.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Engine/Targetpoint.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleTargetPoint.generated.h"</span></span>
+
+UCLASS()
+<span class="hljs-keyword">class</span> TOOLEXAMPLE_API AExampleTargetPoint : <span class="hljs-keyword">public</span> ATargetPoint
+{
+    GENERATED_BODY()
+
+<span class="hljs-keyword">public</span>:
+    UPROPERTY(EditAnywhere, Category = <span class="hljs-string">"Points"</span>)
+    TArray&lt;FVector&gt; Points;
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we modify <strong>ExampleEdMode</strong> to add functions to add point, remove point, and select point. We also save our current selection in variable, here we use weak object pointer to handle the case if the actor is removed.</p>
+</div>
+<div class="paragraph">
+<p>For adding point, we only allow that when you have exactly on <strong>ExampleTargetPoint</strong> actor selected in editor. For removing point, we simply remove the current selected point if there is any. If you select any point, we will deselect all actors and select the actor associated with that point.</p>
+</div>
+<div class="paragraph">
+<p>Note that we put <strong>FScopedTransaction</strong>, and called <strong>Modify()</strong> function whenever we modify data we need to save. This will make sure undo/redo is properly handled.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">...
+<span class="hljs-keyword">class</span> AExampleTargetPoint;
+
+<span class="hljs-keyword">class</span> FExampleEdMode : <span class="hljs-keyword">public</span> FEdMode
+{
+<span class="hljs-keyword">public</span>:
+    ...
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">AddPoint</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">CanAddPoint</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">RemovePoint</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">CanRemovePoint</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">HasValidSelection</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SelectPoint</span><span class="hljs-params">(AExampleTargetPoint* actor, int32 index)</span></span>;
+
+    TWeakObjectPtr&lt;AExampleTargetPoint&gt; currentSelectedTarget;
+    int32 currentSelectedIndex = <span class="hljs-number">-1</span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">void</span> FExampleEdMode::Enter()
+{
+    ...
+
+    <span class="hljs-comment">// reset</span>
+    currentSelectedTarget = <span class="hljs-literal">nullptr</span>;
+    currentSelectedIndex = <span class="hljs-number">-1</span>;
+}
+
+<span class="hljs-function">AExampleTargetPoint* <span class="hljs-title">GetSelectedTargetPointActor</span><span class="hljs-params">()</span>
+</span>{
+    TArray&lt;UObject*&gt; selectedObjects;
+    GEditor-&gt;GetSelectedActors()-&gt;GetSelectedObjects(selectedObjects);
+    <span class="hljs-keyword">if</span> (selectedObjects.Num() == <span class="hljs-number">1</span>)
+    {
+        <span class="hljs-keyword">return</span> Cast&lt;AExampleTargetPoint&gt;(selectedObjects[<span class="hljs-number">0</span>]);
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nullptr</span>;
+}
+
+<span class="hljs-keyword">void</span> FExampleEdMode::AddPoint()
+{
+    AExampleTargetPoint* actor = GetSelectedTargetPointActor();
+    <span class="hljs-keyword">if</span> (actor)
+    {
+        <span class="hljs-function"><span class="hljs-keyword">const</span> FScopedTransaction <span class="hljs-title">Transaction</span><span class="hljs-params">(FText::FromString(<span class="hljs-string">"Add Point"</span>)</span>)</span>;
+
+        <span class="hljs-comment">// add new point, slightly in front of camera</span>
+        FEditorViewportClient* client = (FEditorViewportClient*)GEditor-&gt;GetActiveViewport()-&gt;GetClient();
+        FVector newPoint = client-&gt;GetViewLocation() + client-&gt;GetViewRotation().Vector() * <span class="hljs-number">50.f</span>;
+        actor-&gt;Modify();
+        actor-&gt;Points.Add(newPoint);
+        <span class="hljs-comment">// auto select this new point</span>
+        SelectPoint(actor, actor-&gt;Points.Num() - <span class="hljs-number">1</span>);
+    }
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::CanAddPoint() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> GetSelectedTargetPointActor() != <span class="hljs-literal">nullptr</span>;
+}
+
+<span class="hljs-keyword">void</span> FExampleEdMode::RemovePoint()
+{
+    <span class="hljs-keyword">if</span> (HasValidSelection())
+    {
+        <span class="hljs-function"><span class="hljs-keyword">const</span> FScopedTransaction <span class="hljs-title">Transaction</span><span class="hljs-params">(FText::FromString(<span class="hljs-string">"Remove Point"</span>)</span>)</span>;
+
+        currentSelectedTarget-&gt;Modify();
+        currentSelectedTarget-&gt;Points.RemoveAt(currentSelectedIndex);
+        <span class="hljs-comment">// deselect the point</span>
+        SelectPoint(<span class="hljs-literal">nullptr</span>, <span class="hljs-number">-1</span>);
+    }
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::CanRemovePoint() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> HasValidSelection();
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::HasValidSelection() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> currentSelectedTarget.IsValid() &amp;&amp; currentSelectedIndex &gt;= <span class="hljs-number">0</span> &amp;&amp; currentSelectedIndex &lt; currentSelectedTarget-&gt;Points.Num();
+}
+
+<span class="hljs-keyword">void</span> FExampleEdMode::SelectPoint(AExampleTargetPoint* actor, int32 index)
+{
+    currentSelectedTarget = actor;
+    currentSelectedIndex = index;
+
+    <span class="hljs-comment">// select this actor only</span>
+    <span class="hljs-keyword">if</span> (currentSelectedTarget.IsValid())
+    {
+        GEditor-&gt;SelectNone(<span class="hljs-literal">true</span>, <span class="hljs-literal">true</span>);
+        GEditor-&gt;SelectActor(currentSelectedTarget.Get(), <span class="hljs-literal">true</span>, <span class="hljs-literal">true</span>);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we have functionality ready, we still need to hook it up with UI. Modify to <strong>SExampleEdModeWidget</strong>  add "Add" and "Remove" button, and we will check "CanAddPoint" and "CanRemovePoint" to determine if the button should be enabled.</p>
+</div>
+<div class="listingblock">
+<div class="title">SExampleEdModeWidget.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">class</span> SExampleEdModeWidget : <span class="hljs-keyword">public</span> SCompoundWidget
+{
+<span class="hljs-keyword">public</span>:
+    ...
+    <span class="hljs-function">FReply <span class="hljs-title">OnAddPoint</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">CanAddPoint</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+    <span class="hljs-function">FReply <span class="hljs-title">OnRemovePoint</span><span class="hljs-params">()</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">CanRemovePoint</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span></span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">SExampleEdModeWidget.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">void</span> SExampleEdModeWidget::Construct(<span class="hljs-keyword">const</span> FArguments&amp; InArgs)
+{
+    ChildSlot
+    [
+        SNew(SScrollBox)
+        + SScrollBox::Slot()
+        .VAlign(VAlign_Top)
+        .Padding(<span class="hljs-number">5.f</span>)
+        [
+            SNew(SVerticalBox)
+            + SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(<span class="hljs-number">0.f</span>, <span class="hljs-number">5.f</span>, <span class="hljs-number">0.f</span>, <span class="hljs-number">0.f</span>)
+            [
+                SNew(STextBlock)
+                .Text(FText::FromString(TEXT(<span class="hljs-string">"This is a editor mode example."</span>)))
+            ]
+            + SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(<span class="hljs-number">0.f</span>, <span class="hljs-number">5.f</span>, <span class="hljs-number">0.f</span>, <span class="hljs-number">0.f</span>)
+            [
+                SNew(SHorizontalBox)
+                + SHorizontalBox::Slot()
+                .AutoWidth()
+                .Padding(<span class="hljs-number">2</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>)
+                .VAlign(VAlign_Center)
+                [
+                    SNew(SButton)
+                    .Text(FText::FromString(<span class="hljs-string">"Add"</span>))
+                    .OnClicked(<span class="hljs-keyword">this</span>, &amp;SExampleEdModeWidget::OnAddPoint)
+                    .IsEnabled(<span class="hljs-keyword">this</span>, &amp;SExampleEdModeWidget::CanAddPoint)
+                ]
+                + SHorizontalBox::Slot()
+                .AutoWidth()
+                .VAlign(VAlign_Center)
+                .Padding(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">2</span>, <span class="hljs-number">0</span>)
+                [
+                    SNew(SButton)
+                    .Text(FText::FromString(<span class="hljs-string">"Remove"</span>))
+                    .OnClicked(<span class="hljs-keyword">this</span>, &amp;SExampleEdModeWidget::OnRemovePoint)
+                    .IsEnabled(<span class="hljs-keyword">this</span>, &amp;SExampleEdModeWidget::CanRemovePoint)
+                ]
+            ]
+        ]
+    ];
+}
+
+FReply SExampleEdModeWidget::OnAddPoint()
+{
+    GetEdMode()-&gt;AddPoint();
+    <span class="hljs-keyword">return</span> FReply::Handled();
+}
+
+<span class="hljs-keyword">bool</span> SExampleEdModeWidget::CanAddPoint() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> GetEdMode()-&gt;CanAddPoint();
+}
+
+FReply SExampleEdModeWidget::OnRemovePoint()
+{
+    GetEdMode()-&gt;RemovePoint();
+    <span class="hljs-keyword">return</span> FReply::Handled();
+}
+
+<span class="hljs-keyword">bool</span> SExampleEdModeWidget::CanRemovePoint() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> GetEdMode()-&gt;CanRemovePoint();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now if you launch the editor, you should be able to drag in an "Example Target Point", switch to our editor mode, select that target point and add new points from the editor mode UI. However it is not visualized in the viewport yet, and you cannot click and select point. We will work on that next.</p>
+</div>
+<div class="paragraph">
+<p>To be able to click in editor and select something, we need to define a HitProxy struct. When we render the points, we render with this hit proxy along with some data attached to it. Then when we get the click event, we can retrieve those data back from the proxy and know what we clicked on.</p>
+</div>
+<div class="paragraph">
+<p>Back to <strong>ExampleEdMode</strong>, we define <strong>HExamplePointProxy</strong> with a reference object (the ExampleTargetPoint actor) and the point index, and we add <strong>Render</strong> and <strong>HandleClick</strong> override function.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">struct</span> HExamplePointProxy : <span class="hljs-keyword">public</span> HHitProxy
+{
+    DECLARE_HIT_PROXY();
+
+    HExamplePointProxy(UObject* InRefObject, int32 InIndex)
+        : HHitProxy(HPP_UI), RefObject(InRefObject), Index(InIndex)
+    {}
+
+    UObject* RefObject;
+    int32 Index;
+};
+
+<span class="hljs-keyword">class</span> FExampleEdMode : <span class="hljs-keyword">public</span> FEdMode
+{
+<span class="hljs-keyword">public</span>:
+    ...
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Render</span><span class="hljs-params">(<span class="hljs-keyword">const</span> FSceneView* View, FViewport* Viewport, FPrimitiveDrawInterface* PDI)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">HandleClick</span><span class="hljs-params">(FEditorViewportClient* InViewportClient, HHitProxy *HitProxy, <span class="hljs-keyword">const</span> FViewportClick &amp;Click)</span> override</span>;
+};</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then in cpp file, we use macro <strong>IMPLEMENT_HIT_PROXY</strong> to implement the proxy. In <strong>Render</strong> we simply loops through all <strong>ExampleTargetPoint</strong> actor and draw all the points (and a line to the actor itself), we choose a different color if this is the current selected point. We set hit proxy for each point before drawing and clears it immediately afterwards (this is important so the proxy doesn’t leak through to other draws). In <strong>HandleClick</strong>, we test hit proxy and select point if we have a valid hit. We don’t check mouse button here, so you can select with left/right/middle click.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">IMPLEMENT_HIT_PROXY(HExamplePointProxy, HHitProxy);
+...
+
+<span class="hljs-keyword">void</span> FExampleEdMode::Render(<span class="hljs-keyword">const</span> FSceneView* View, FViewport* Viewport, FPrimitiveDrawInterface* PDI)
+{
+    <span class="hljs-function"><span class="hljs-keyword">const</span> FColor <span class="hljs-title">normalColor</span><span class="hljs-params">(<span class="hljs-number">200</span>, <span class="hljs-number">200</span>, <span class="hljs-number">200</span>)</span></span>;
+    <span class="hljs-function"><span class="hljs-keyword">const</span> FColor <span class="hljs-title">selectedColor</span><span class="hljs-params">(<span class="hljs-number">255</span>, <span class="hljs-number">128</span>, <span class="hljs-number">0</span>)</span></span>;
+
+    UWorld* World = GetWorld();
+    <span class="hljs-keyword">for</span> (TActorIterator&lt;AExampleTargetPoint&gt; It(World); It; ++It)
+    {
+        AExampleTargetPoint* actor = (*It);
+        <span class="hljs-keyword">if</span> (actor)
+        {
+            FVector actorLoc = actor-&gt;GetActorLocation();
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; actor-&gt;Points.Num(); ++i)
+            {
+                <span class="hljs-keyword">bool</span> bSelected = (actor == currentSelectedTarget &amp;&amp; i == currentSelectedIndex);
+                <span class="hljs-keyword">const</span> FColor&amp; color = bSelected ? selectedColor : normalColor;
+                <span class="hljs-comment">// set hit proxy and draw</span>
+                PDI-&gt;SetHitProxy(<span class="hljs-keyword">new</span> HExamplePointProxy(actor, i));
+                PDI-&gt;DrawPoint(actor-&gt;Points[i], color, <span class="hljs-number">15.f</span>, SDPG_Foreground);
+                PDI-&gt;DrawLine(actor-&gt;Points[i], actorLoc, color, SDPG_Foreground);
+                PDI-&gt;SetHitProxy(<span class="hljs-literal">NULL</span>);
+            }
+        }
+    }
+
+    FEdMode::Render(View, Viewport, PDI);
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProxy *HitProxy, <span class="hljs-keyword">const</span> FViewportClick &amp;Click)
+{
+    <span class="hljs-keyword">bool</span> isHandled = <span class="hljs-literal">false</span>;
+
+    <span class="hljs-keyword">if</span> (HitProxy)
+    {
+        <span class="hljs-keyword">if</span> (HitProxy-&gt;IsA(HExamplePointProxy::StaticGetType()))
+        {
+            isHandled = <span class="hljs-literal">true</span>;
+            HExamplePointProxy* examplePointProxy = (HExamplePointProxy*)HitProxy;
+            AExampleTargetPoint* actor = Cast&lt;AExampleTargetPoint&gt;(examplePointProxy-&gt;RefObject);
+            int32 index = examplePointProxy-&gt;Index;
+            <span class="hljs-keyword">if</span> (actor &amp;&amp; index &gt;= <span class="hljs-number">0</span> &amp;&amp; index &lt; actor-&gt;Points.Num())
+            {
+                SelectPoint(actor, index);
+            }
+        }
+    }
+
+    <span class="hljs-keyword">return</span> isHandled;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With all of these you can start adding/removing points in the editor:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/025.png" alt="025.png" width="1325">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_use_transform_widget">Use Transform Widget</h3>
+<div class="paragraph">
+<p>The next mission is to be able to move point around in editor like moving any other actor. Go back to <strong>ExampleEdMode</strong>, this time we need to add support for custom transform widget, and handle <strong>InputDelta</strong> event. In <strong>InputDelta</strong> function, we don’t use <strong>FScopedTransaction</strong> because undo/redo is already handled for this function. We still need to call <strong>Modify()</strong> though.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">...
+<span class="hljs-keyword">class</span> FExampleEdMode : <span class="hljs-keyword">public</span> FEdMode
+{
+<span class="hljs-keyword">public</span>:
+    ...
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">InputDelta</span><span class="hljs-params">(FEditorViewportClient* InViewportClient, FViewport* InViewport, FVector&amp; InDrag, FRotator&amp; InRot, FVector&amp; InScale)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">ShowModeWidgets</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">ShouldDrawWidget</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">UsesTransformWidget</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> FVector <span class="hljs-title">GetWidgetLocation</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> override</span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">bool</span> FExampleEdMode::InputDelta(FEditorViewportClient* InViewportClient, FViewport* InViewport, FVector&amp; InDrag, FRotator&amp; InRot, FVector&amp; InScale)
+{
+    <span class="hljs-keyword">if</span> (InViewportClient-&gt;GetCurrentWidgetAxis() == EAxisList::None)
+    {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-keyword">if</span> (HasValidSelection())
+    {
+        <span class="hljs-keyword">if</span> (!InDrag.IsZero())
+        {
+            currentSelectedTarget-&gt;Modify();
+            currentSelectedTarget-&gt;Points[currentSelectedIndex] += InDrag;
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::ShowModeWidgets() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::ShouldDrawWidget() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::UsesTransformWidget() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+FVector FExampleEdMode::GetWidgetLocation() <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-keyword">if</span> (HasValidSelection())
+    {
+        <span class="hljs-keyword">return</span> currentSelectedTarget-&gt;Points[currentSelectedIndex];
+    }
+    <span class="hljs-keyword">return</span> FEdMode::GetWidgetLocation();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you should have a transform widget to move your points around:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/026.png" alt="026.png" width="475">
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">GetCustomDrawingCoordinateSystem</span><span class="hljs-params">(FMatrix&amp; InMatrix, <span class="hljs-keyword">void</span>* InData)</span> override</span>;
+<span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">GetCustomInputCoordinateSystem</span><span class="hljs-params">(FMatrix&amp; InMatrix, <span class="hljs-keyword">void</span>* InData)</span> override</span>;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_key_input_support_right_click_menu_and_others">Key input support, right click menu, and others</h3>
+<div class="paragraph">
+<p>Next we will add some other common features: when we have a point selected, we want to hit delete button and remove it. Also we want to have a menu generated when you right click on a point, showing the point index, and an option to delete it.</p>
+</div>
+<div class="paragraph">
+<p>Remember in the "Menu Tool" tutorial, in order to make a menu, we would need a UI command list, here we will do the same thing. We also override <strong>InputKey</strong> function to handle input. Though we can simply call functions based on which key is pressed, since we have the same functionality in the menu, we will route the input through the UI command list instead. (when we define UI Commands, we pass in a key in <strong>FInputGesture</strong>)</p>
+</div>
+<div class="paragraph">
+<p>Finally we will modify <strong>HandleClick</strong> function to generate context menu when we right click on a point.</p>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">...
+<span class="hljs-keyword">class</span> FExampleEdMode : <span class="hljs-keyword">public</span> FEdMode
+{
+<span class="hljs-keyword">public</span>:
+    ...
+    FExampleEdMode();
+    ~FExampleEdMode();
+
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">HandleClick</span><span class="hljs-params">(FEditorViewportClient* InViewportClient, HHitProxy *HitProxy, <span class="hljs-keyword">const</span> FViewportClick &amp;Click)</span> override</span>;
+
+    TSharedPtr&lt;FUICommandList&gt; ExampleEdModeActions;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">MapCommands</span><span class="hljs-params">()</span></span>;
+    TSharedPtr&lt;SWidget&gt; GenerateContextMenu(FEditorViewportClient* InViewportClient) <span class="hljs-keyword">const</span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleEdMode.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">class</span> ExampleEditorCommands : <span class="hljs-keyword">public</span> TCommands&lt;ExampleEditorCommands&gt;
+{
+<span class="hljs-keyword">public</span>:
+    ExampleEditorCommands() : TCommands &lt;ExampleEditorCommands&gt;
+        (
+            <span class="hljs-string">"ExampleEditor"</span>,    <span class="hljs-comment">// Context name for fast lookup</span>
+            FText::FromString(TEXT(<span class="hljs-string">"Example Editor"</span>)),  <span class="hljs-comment">// context name for displaying</span>
+            NAME_None,  <span class="hljs-comment">// Parent</span>
+            FEditorStyle::GetStyleSetName()
+            )
+    {
+    }
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> LOCTEXT_NAMESPACE <span class="hljs-meta-string">""</span></span>
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">RegisterCommands</span><span class="hljs-params">()</span> override
+    </span>{
+        UI_COMMAND(DeletePoint, <span class="hljs-string">"Delete Point"</span>, <span class="hljs-string">"Delete the currently selected point."</span>, EUserInterfaceActionType::Button, FInputGesture(EKeys::Delete));
+    }
+<span class="hljs-meta">#<span class="hljs-meta-keyword">undef</span> LOCTEXT_NAMESPACE</span>
+
+<span class="hljs-keyword">public</span>:
+    TSharedPtr&lt;FUICommandInfo&gt; DeletePoint;
+};
+
+
+FExampleEdMode::FExampleEdMode()
+{
+    ExampleEditorCommands::Register();
+    ExampleEdModeActions = MakeShareable(<span class="hljs-keyword">new</span> FUICommandList);
+}
+
+FExampleEdMode::~FExampleEdMode()
+{
+    ExampleEditorCommands::Unregister();
+}
+
+<span class="hljs-keyword">void</span> FExampleEdMode::MapCommands()
+{
+    <span class="hljs-keyword">const</span> <span class="hljs-keyword">auto</span>&amp; Commands = ExampleEditorCommands::Get();
+
+    ExampleEdModeActions-&gt;MapAction(
+        Commands.DeletePoint,
+        FExecuteAction::CreateSP(<span class="hljs-keyword">this</span>, &amp;FExampleEdMode::RemovePoint),
+        FCanExecuteAction::CreateSP(<span class="hljs-keyword">this</span>, &amp;FExampleEdMode::CanRemovePoint));
+}
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::InputKey(FEditorViewportClient* ViewportClient, FViewport* Viewport, FKey Key, EInputEvent Event)
+{
+    <span class="hljs-keyword">bool</span> isHandled = <span class="hljs-literal">false</span>;
+
+    <span class="hljs-keyword">if</span> (!isHandled &amp;&amp; Event == IE_Pressed)
+    {
+        isHandled = ExampleEdModeActions-&gt;ProcessCommandBindings(Key, FSlateApplication::Get().GetModifierKeys(), <span class="hljs-literal">false</span>);
+    }
+
+    <span class="hljs-keyword">return</span> isHandled;
+}
+
+TSharedPtr&lt;SWidget&gt; FExampleEdMode::GenerateContextMenu(FEditorViewportClient* InViewportClient) <span class="hljs-keyword">const</span>
+{
+    <span class="hljs-function">FMenuBuilder <span class="hljs-title">MenuBuilder</span><span class="hljs-params">(<span class="hljs-literal">true</span>, <span class="hljs-literal">NULL</span>)</span></span>;
+
+    MenuBuilder.PushCommandList(ExampleEdModeActions.ToSharedRef());
+    MenuBuilder.BeginSection(<span class="hljs-string">"Example Section"</span>);
+    <span class="hljs-keyword">if</span> (HasValidSelection())
+    {
+        <span class="hljs-comment">// add label for point index</span>
+        TSharedRef&lt;SWidget&gt; LabelWidget =
+            SNew(STextBlock)
+            .Text(FText::FromString(FString::FromInt(currentSelectedIndex)))
+            .ColorAndOpacity(FLinearColor::Green);
+        MenuBuilder.AddWidget(LabelWidget, FText::FromString(TEXT(<span class="hljs-string">"Point Index: "</span>)));
+        MenuBuilder.AddMenuSeparator();
+        <span class="hljs-comment">// add delete point entry</span>
+        MenuBuilder.AddMenuEntry(ExampleEditorCommands::Get().DeletePoint);
+    }
+    MenuBuilder.EndSection();
+    MenuBuilder.PopCommandList();
+
+    TSharedPtr&lt;SWidget&gt; MenuWidget = MenuBuilder.MakeWidget();
+    <span class="hljs-keyword">return</span> MenuWidget;
+}
+
+
+<span class="hljs-keyword">bool</span> FExampleEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProxy *HitProxy, <span class="hljs-keyword">const</span> FViewportClick &amp;Click)
+{
+    ...
+
+    <span class="hljs-keyword">if</span> (HitProxy &amp;&amp; isHandled &amp;&amp; Click.GetKey() == EKeys::RightMouseButton)
+    {
+        TSharedPtr&lt;SWidget&gt; MenuWidget = GenerateContextMenu(InViewportClient);
+        <span class="hljs-keyword">if</span> (MenuWidget.IsValid())
+        {
+            FSlateApplication::Get().PushMenu(
+                Owner-&gt;GetToolkitHost()-&gt;GetParentWidget(),
+                FWidgetPath(),
+                MenuWidget.ToSharedRef(),
+                FSlateApplication::Get().GetCursorPos(),
+                FPopupTransitionEffect(FPopupTransitionEffect::ContextMenu));
+        }
+    }
+
+    <span class="hljs-keyword">return</span> isHandled;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following is the result:</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/027.png" alt="027.png" width="463">
+</div>
+</div>
+<div class="paragraph">
+<p>There are other virtual functions from FEdMode that can be very helpful. I’ll list some of them here:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Tick</span><span class="hljs-params">(FEditorViewportClient* ViewportClient, <span class="hljs-keyword">float</span> DeltaTime)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">CapturedMouseMove</span><span class="hljs-params">(FEditorViewportClient* InViewportClient, FViewport* InViewport, int32 InMouseX, int32 InMouseY)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">StartTracking</span><span class="hljs-params">(FEditorViewportClient* InViewportClient, FViewport* InViewport)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">EndTracking</span><span class="hljs-params">(FEditorViewportClient* InViewportClient, FViewport* InViewport)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">HandleClick</span><span class="hljs-params">(FEditorViewportClient* InViewportClient, HHitProxy *HitProxy, <span class="hljs-keyword">const</span> FViewportClick &amp;Click)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">PostUndo</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ActorsDuplicatedNotify</span><span class="hljs-params">(TArray&lt;AActor*&gt;&amp; PreDuplicateSelection, TArray&lt;AActor*&gt;&amp; PostDuplicateSelection, <span class="hljs-keyword">bool</span> bOffsetLocations)</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ActorMoveNotify</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ActorSelectionChangeNotify</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MapChangeNotify</span><span class="hljs-params">()</span> override</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SelectionChanged</span><span class="hljs-params">()</span> override</span>;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_custom_project_settings">Custom Project Settings</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Remember you can you go to Edit → Project Settings in Unreal editor to change various game/editor settings? You can add your custom settings to this window as well.</p>
+</div>
+<div class="paragraph">
+<p>First we create a settings object. In this example we will create it in editor module, you can create in game module as well, just remember to export it with proper macro.
+In the UCLASS macro, we need specify which .ini file to write to. You can use existing .ini file like "Game" or "Editor". In this case we want this setting to be per user and not shared on source control, so we create a new ini file.
+For each UPROPERTY that you want to include in the settings, mark it with "<strong>config</strong>".</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/028.png" alt="028.png" width="213">
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ExampleSettings.h</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> once</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ExampleSettings.generated.h"</span></span>
+
+UCLASS(config = EditorUserSettings, defaultconfig)
+<span class="hljs-keyword">class</span> UExampleSettings : <span class="hljs-keyword">public</span> UObject
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, config, Category = Test)
+    <span class="hljs-keyword">bool</span> bTest = <span class="hljs-literal">false</span>;
+};</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">ToolExampleEditor.cpp</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp">...
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"ISettingsModule.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"Developer/Settings/Public/ISettingsContainer.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"CustomProjectSettings/ExampleSettings.h"</span></span>
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::StartupModule()
+{
+    ...
+    <span class="hljs-comment">// register settings:</span>
+    {
+        ISettingsModule* SettingsModule = FModuleManager::GetModulePtr&lt;ISettingsModule&gt;(<span class="hljs-string">"Settings"</span>);
+        <span class="hljs-keyword">if</span> (SettingsModule)
+        {
+            TSharedPtr&lt;ISettingsContainer&gt; ProjectSettingsContainer = SettingsModule-&gt;GetContainer(<span class="hljs-string">"Project"</span>);
+            ProjectSettingsContainer-&gt;DescribeCategory(<span class="hljs-string">"ExampleCategory"</span>, FText::FromString(<span class="hljs-string">"Example Category"</span>), FText::FromString(<span class="hljs-string">"Example settings description text here"</span>));
+
+            SettingsModule-&gt;RegisterSettings(<span class="hljs-string">"Project"</span>, <span class="hljs-string">"ExampleCategory"</span>, <span class="hljs-string">"ExampleSettings"</span>,
+                FText::FromString(<span class="hljs-string">"Example Settings"</span>),
+                FText::FromString(<span class="hljs-string">"Configure Example Settings"</span>),
+                GetMutableDefault&lt;UExampleSettings&gt;()
+            );
+        }
+    }
+
+    IExampleModuleInterface::StartupModule();
+}
+
+<span class="hljs-keyword">void</span> FToolExampleEditor::ShutdownModule()
+{
+    ...
+    <span class="hljs-comment">// unregister settings</span>
+    ISettingsModule* SettingsModule = FModuleManager::GetModulePtr&lt;ISettingsModule&gt;(<span class="hljs-string">"Settings"</span>);
+    <span class="hljs-keyword">if</span> (SettingsModule)
+    {
+        SettingsModule-&gt;UnregisterSettings(<span class="hljs-string">"Project"</span>, <span class="hljs-string">"ExampleCategory"</span>, <span class="hljs-string">"ExampleSettings"</span>);
+    }
+
+    IExampleModuleInterface::ShutdownModule();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you should see your custom settings in "Project Settings" window. And when you change it, you should see DefaultEditorUserSettings.ini created in \ToolExample\Config</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/029.png" alt="029.png" width="1060">
+</div>
+</div>
+<div class="paragraph">
+<p>To get access to this settings, do the following:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-keyword">const</span> UExampleSettings* ExampleSettings = GetDefault&lt;UExampleSettings&gt;();
+<span class="hljs-keyword">if</span>(ExampleSettings &amp;&amp; ExampleSettings-&gt;bTest)
+    <span class="hljs-comment">// do something</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_tricks">Tricks</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_use_widget_reflector">Use Widget Reflector</h3>
+<div class="paragraph">
+<p>The best way to learn SLATE and Unreal tools, is to use Widget Reflector. In Window → Developer Tool → Widget Reflector to launch the reflector. Click on "Pick Live Widget" and mouse over the widget you want to see, then hit "ESC" to freeze.</p>
+</div>
+<div class="paragraph">
+<p>For example we can mouse over our editor mode widget, and you can see the structure showing in the reflector window. You can click on the file and it will take you to the exact place that widget is constructed. This is powerful tool to debug your widget or to learn how Unreal build their widget.</p>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/030.png" alt="030.png" width="1466">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_is_my_tool_running_in_the_editor_or_game">Is my tool running in the editor or game?</h3>
+<div class="paragraph">
+<p>There 3 conditions that your tool is running:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Editor: game not started, you can do all normal editing.</p>
+</li>
+<li>
+<p>Game: game started, cannot do any editing.</p>
+</li>
+<li>
+<p>Simulate: either hit “Simulate” or hit “Play” then “Eject”, game started and you can do limited editing.
+Here is how you can determine which state you are in:</p>
+</li>
+</ol>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Editor</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Game</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Simulate</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>FApp::IsGame()</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Cast&lt;UEditorEngine&gt;(GEngine)→bIsSimulatingInEditor</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">true</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Note: this do NOT work in SLATE call (any UI tick for example), because that is in SLATE world.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_useful_uproperty_meta_marker">Useful UPROPERTY() meta marker</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>MakeEditWidget</strong>: If you just need to visualize a point in the level and be able to drag it around, this is the quick way to do it. It works for FVector or FTransform, and it works with TArray of those as well.<br>
+example: UPROPERTY(meta = (MakeEditWidget = true))</p>
+</li>
+<li>
+<p><strong>DisplayName, ToolTip</strong>: Useful if you want to have a different display name than the variable name; or if you want add a mouse over tooltip. There are plenty of examples in Unreal code base.</p>
+</li>
+<li>
+<p><strong>ClampMin, ClampMax, UIMin, UIMax</strong>: You can specify a range for the value that can be input for this field.<br>
+example: UPROPERTY(meta = (ClampMin = "0", ClampMax = "180"))</p>
+</li>
+<li>
+<p><strong>EditCondition</strong>: You can specify a bool to determine whether this field is editable.<br>
+example: UPROPERTY(meta = (EditCondition = "bIsThisFieldEnabled")))</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For a complete list, search for <strong>ObjectMacros.h</strong> in Unreal code base.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_make_custom_animation_blueprint_node">Make custom Animation Blueprint Node</h3>
+<div class="paragraph">
+<p>To make a custom Animation Blueprint Node, you need to first inherit from <strong>FAnimNode_Base</strong> class in game module, this class will process animation pose at runtime.</p>
+</div>
+<div class="paragraph">
+<p>Then in the editor module, inherit from <strong>UAnimGraphNode_Base</strong> class, and define how you want this node to be in editor.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_debug_draw_tricks">Debug Draw Tricks</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Easy way to draw circle/box/sphere<br>
+FPrimitiveDrawInterface only provides basic draw methods (DrawSprite, DrawPoint, DrawLine, DrawMesh). However Unreal already has a collection of “advanced” draw methods for their own use. Defined in “PrimitiveDrawingUtils.cpp” and declared in “SceneManagement.h”. Check out “PrimitiveDrawingUtils.cpp” for details. Necessary files should already be included, so just call “DrawCircle” or “DrawBox”.</p>
+</li>
+<li>
+<p>Draw point with world space size<br>
+The default <strong>FPrimitiveDrawInterface::DrawPoint</strong> function will only draw point with screen space size, but sometimes you want to give it a world space size, here’s how you can do it:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-cpp hljs" data-lang="cpp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">DrawPointWS</span> <span class="hljs-params">(
+    FPrimitiveDrawInterface* PDI,
+    <span class="hljs-keyword">const</span> FVector&amp; Position,
+    <span class="hljs-keyword">const</span> FLinearColor&amp; Color,
+    <span class="hljs-keyword">float</span> PointSize,
+    uint8 DepthPriorityGroup,
+    <span class="hljs-keyword">bool</span> bScreenSpaceSize
+)</span>
+</span>{
+    <span class="hljs-keyword">float</span> ScaledPointSize = PointSize;
+    <span class="hljs-keyword">if</span> (!bScreenSpaceSize)
+    {
+        FVector PositionVS = PDI-&gt;View-&gt;ViewMatrices.GetViewMatrix().TransformPosition(Position);
+        <span class="hljs-keyword">float</span> factor = FMath::Max(FMath::Abs(PositionVS.Z), <span class="hljs-number">0.001f</span>);
+        ScaledPointSize /= factor;
+        ScaledPointSize *= PDI-&gt;View-&gt;ViewRect.Width();
+    }
+    PDI-&gt;DrawPoint(Position, Color, ScaledPointSize, DepthPriorityGroup);
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_other_tricks_for_editor_mode">Other Tricks for Editor Mode</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>It is quite common you need a viewport client to do something, and not all functions has viewport client passed in. Here is the call you can get that from anywhere:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>FEditorViewportClient* client = (FEditorViewportClient*)GEditor-&gt;GetActiveViewport()-&gt;GetClient();</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>It is also quite common you want to refresh rendering for the whole viewport after the user did some edit in your tool. Use the following call:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>GEditor-&gt;RedrawAllViewports(true);</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If the Editor Mode is not responding, or lagging behind, make sure you have "Realtime" checked in viewport.</p>
+</li>
+</ul>
+</div>
+<div class="imageblock" style="text-align: left">
+<div class="content">
+<img src="./images/031.png" alt="031.png" width="487">
+</div>
+</div>
+</div>
+</div>
+</div>
+    </section>
+	
+
+  </article>
+
+</body></html>
