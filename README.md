@@ -109,4 +109,6 @@ Contributors:
 [duyaokun](https://github.com/duyaokun) (2024)
 You! (Future!)
 
+[CHANGELOG](notes/CHANGELOG.md)
+
 _ToolExample is licensed under the [MIT License](LICENSE.md)._
