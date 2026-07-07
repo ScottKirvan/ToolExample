@@ -8,6 +8,8 @@
 * add emoji input to discord-notify job ([9826c81](https://github.com/ScottKirvan/ToolExample/commit/9826c81cf17ada0033adc3532f300c536717df07))
 * add update-changelog-prs job and CHANGELOG link in README ([c6be9da](https://github.com/ScottKirvan/ToolExample/commit/c6be9da2780131f67c0cf2ad1a6a724ffa110252))
 
+Includes PRs: [#25](https://github.com/ScottKirvan/ToolExample/pull/25), [#26](https://github.com/ScottKirvan/ToolExample/pull/26)
+
 ## [0.1.1](https://github.com/ScottKirvan/ToolExample/compare/v0.1.0...v0.1.1) (2026-06-30)
 
 
