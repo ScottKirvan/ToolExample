@@ -5,3 +5,23 @@
 html {
   zoom: 0.875;
 }
+
+/* Light/dark sponsor logo swap */
+.sponsor-logo.dark-only {
+  display: none;
+}
+html.dark .sponsor-logo.dark-only {
+  display: inline-block;
+}
+html.dark .sponsor-logo.light-only {
+  display: none;
+}
+
+/* Greyscale until hover */
+.sponsor-logo {
+  filter: grayscale(100%);
+  transition: filter 0.25s ease;
+}
+.sponsor-logo:hover {
+  filter: grayscale(0%);
+}
