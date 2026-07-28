@@ -25,9 +25,54 @@ jobs:
           config-file: .github/release-please/release-please-config.json
           manifest-file: .github/release-please/.release-please-manifest.json
 
-  improve-release-notes:
+  apply-staged-notes:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    outputs:
+      used_staging: ${{ steps.apply.outputs.used_staging }}
+      discord_blurb: ${{ steps.apply.outputs.discord_blurb }}
+    steps:
+      - name: Apply staged notes and clean up
+        id: apply
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          STAGING_BRANCH="pre-release-staging/$TAG"
+
+          if ! gh api "repos/$REPO/branches/$STAGING_BRANCH" > /dev/null 2>&1; then
+            echo "used_staging=false" >> "$GITHUB_OUTPUT"
+            echo "No staging branch found for $TAG — will fall back to AI generation"
+            exit 0
+          fi
+
+          echo "Found staging branch: $STAGING_BRANCH"
+
+          NOTES=$(gh api "repos/$REPO/contents/.github/tmp/pre-release-staging/release-notes.md?ref=$STAGING_BRANCH" \
+            --jq '.content' | base64 -d)
+          BLURB=$(gh api "repos/$REPO/contents/.github/tmp/pre-release-staging/discord-blurb.txt?ref=$STAGING_BRANCH" \
+            --jq '.content' | base64 -d 2>/dev/null || echo "")
+
+          printf '%s' "$NOTES" > /tmp/staged-release-notes.md
+          gh release edit "$TAG" --repo "$REPO" --notes-file /tmp/staged-release-notes.md
+          echo "Applied staged release notes to $TAG"
+
+          gh api "repos/$REPO/git/refs/heads/$STAGING_BRANCH" --method DELETE || true
+          echo "Deleted staging branch: $STAGING_BRANCH"
+
+          echo "used_staging=true" >> "$GITHUB_OUTPUT"
+          { echo 'discord_blurb<<BLURB_EOF'
+            printf '%s\n' "$BLURB"
+            echo 'BLURB_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+  improve-release-notes:
+    needs: [release-please, apply-staged-notes]
+    if: >-
+      needs.release-please.outputs.release_created == 'true' &&
+      needs.apply-staged-notes.outputs.used_staging == 'false'
     uses: ScottKirvan/.github/.github/workflows/reusable-release-notes.yml@main
     with:
       tag_name: ${{ needs.release-please.outputs.tag_name }}
@@ -52,11 +97,15 @@ jobs:
       tag_name: ${{ needs.release-please.outputs.tag_name }}
 
   discord-notify:
-    needs: [release-please, improve-release-notes]
-    if: ${{ needs.release-please.outputs.release_created }}
+    needs: [release-please, apply-staged-notes, improve-release-notes]
+    if: >-
+      always() &&
+      needs.release-please.outputs.release_created == 'true' &&
+      !failure() && !cancelled()
     uses: ScottKirvan/.github/.github/workflows/reusable-discord-notify.yml@main
     with:
       tag_name: ${{ needs.release-please.outputs.tag_name }}
       project_name: "ToolExample"
       emoji: "🧑‍🎓"
+      discord_blurb: ${{ needs.apply-staged-notes.outputs.discord_blurb || needs.improve-release-notes.outputs.discord_blurb }}
     secrets: inherit
