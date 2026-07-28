@@ -1,0 +1,33 @@
+name: Manual — Pre-Release Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Version tag override — leave blank to infer from open release-please PR
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+  models: read
+  pull-requests: read
+
+jobs:
+  stage:
+    uses: ScottKirvan/.github/.github/workflows/reusable-pre-release-staging.yml@main
+    with:
+      tag_name: ${{ inputs.tag_name }}
+      project_name: "ToolExample"
+      project_context: "ToolExample provides UX/UI C/C++ examples for creating editor tools in Unreal Engine."
+      header: |
+        ## ToolExample
+
+        > UX/UI C/C++ examples for Unreal Engine editor tools.
+
+        ---
+      footer: |
+        ---
+        📖 [User Guide](https://www.scottkirvan.com/ToolExample/) · 🐛 [Report an Issue](https://github.com/ScottKirvan/ToolExample/issues/new?template=bug_report.md) · ✨ [Request Feature](https://github.com/ScottKirvan/ToolExample/issues/new?template=feature_request.md) · 💬 [Discord](https://discord.gg/TN6XJSNK5Y)
+    secrets: inherit
