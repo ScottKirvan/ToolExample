@@ -1,4 +1,4 @@
----
+﻿---
 layout: home
 
 hero:
@@ -22,10 +22,7 @@ hero:
     <img src="/sabelhawk_dark.png" alt="Sabelhawk Studios" width="300" class="sponsor-logo dark-only" />
     <img src="/sabelhawk_lite.png" alt="Sabelhawk Studios" width="300" class="sponsor-logo light-only" />
   </a>
-  <br><br>
-  <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem;">
-    If you're enjoying this project, or it's saved you some time, consider<br>buying me a coffee or becoming a sponsor — it helps keep the<br> projects going.
-  </p><br>
+  <h3>Please support open source software:</h3>
   <div style="display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
   <a href="https://ko-fi.com/ScottKirvan" target="_blank">
     <img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" alt="Support on Ko-fi"  width="160"  />
@@ -35,7 +32,7 @@ hero:
   </a>
   </div>
   <br>
-Thank you! Supporting indie devs makes a real difference.
+Thank you! Your help makes a real and direct difference.
 </div>
 
 <!-- End Sponsors -->
