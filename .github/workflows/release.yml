@@ -87,6 +87,7 @@ jobs:
       footer: |
         ---
         📖 [User Guide](https://www.scottkirvan.com/ToolExample/) · 🐛 [Report an Issue](https://github.com/ScottKirvan/ToolExample/issues/new?template=bug_report.md) · ✨ [Request Feature](https://github.com/ScottKirvan/ToolExample/issues/new?template=feature_request.md) · 💬 [Discord](https://discord.gg/TN6XJSNK5Y)
+      changelog_path: "notes/CHANGELOG.md"
     secrets: inherit
 
   update-changelog-prs:
