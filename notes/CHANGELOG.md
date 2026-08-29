@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/ScottKirvan/ToolExample/compare/v0.1.2...v0.2.0) (2026-08-29)
+
+
+### Features
+
+* add pre-release staging workflow, update release pipeline ([748d274](https://github.com/ScottKirvan/ToolExample/commit/748d274b297533a10ce91377ec9fdf9c0d11cca1))
+
+
+### Bug Fixes
+
+* add changelog link to release and staging footers ([e2a7bef](https://github.com/ScottKirvan/ToolExample/commit/e2a7bef63b52e4913ebf9a73229bd5838ab1a5a8))
+
 ## [0.1.2](https://github.com/ScottKirvan/ToolExample/compare/v0.1.1...v0.1.2) (2026-07-06)
 
 
