@@ -12,6 +12,9 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/ScottKirvan/ToolExample' },
       { icon: 'discord', link: 'https://discord.gg/TN6XJSNK5Y' }
-    ]
+    ],
+    search: {
+      provider: 'local'
+    }
   }
 })
