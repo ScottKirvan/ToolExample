@@ -1,0 +1,39 @@
+name: Update Starline
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # weekly on Sunday at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  starline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Switch to or create starlines branch
+        shell: bash
+        run: |
+          if git ls-remote --exit-code origin refs/heads/starlines > /dev/null 2>&1; then
+            git checkout starlines
+          else
+            git checkout --orphan starlines
+            git rm -rf . > /dev/null 2>&1 || true
+          fi
+
+      - uses: qoomon/starlines@main
+        with:
+          output-directory: ./
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: update starline" || true
+          git push origin starlines
