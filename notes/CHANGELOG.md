@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/ScottKirvan/ToolExample/compare/v0.1.2...v0.2.0) (2026-10-09)
+
+
+### Features
+
+* add pre-release staging workflow, update release pipeline ([748d274](https://github.com/ScottKirvan/ToolExample/commit/748d274b297533a10ce91377ec9fdf9c0d11cca1))
+
+
+### Bug Fixes
+
+* add changelog link to release and staging footers ([e2a7bef](https://github.com/ScottKirvan/ToolExample/commit/e2a7bef63b52e4913ebf9a73229bd5838ab1a5a8))
+* add weekly starline workflow and show the starline in the README header ([c6ef201](https://github.com/ScottKirvan/ToolExample/commit/c6ef2013a86973bc033ffd838b70a1aaf16a21aa))
+
 ## [0.1.2](https://github.com/ScottKirvan/ToolExample/compare/v0.1.1...v0.1.2) (2026-07-06)
 
 
