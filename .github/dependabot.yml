@@ -1,6 +1,9 @@
 # Dependabot version updates, kept low-noise on purpose:
 # - Monthly, one grouped PR per ecosystem for GitHub Actions.
 # - Commits use `chore(deps):`, so release-please doesn't cut a release for them.
+# - Cooldown: a new release waits 7 days before Dependabot offers it, so a
+#   compromised or broken release is usually caught and pulled first.
+#   Security fix PRs are not delayed.
 #
 # Security alerts and security fix PRs are separate repo settings
 # (Settings > Code security) and are turned on; those PRs use the options here.
@@ -11,6 +14,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]
