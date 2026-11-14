@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/ScottKirvan/ToolExample/compare/v0.2.0...v0.2.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* add a 7-day cooldown to Dependabot version updates ([a18f0cb](https://github.com/ScottKirvan/ToolExample/commit/a18f0cbffd8ec1efbf05adf22c8c997a57b6e259))
+* add Dependabot config for monthly grouped dependency updates ([f45b2be](https://github.com/ScottKirvan/ToolExample/commit/f45b2bed0a2cddf197ba06e9a77e2160ac539053))
+
 ## [0.2.0](https://github.com/ScottKirvan/ToolExample/compare/v0.1.2...v0.2.0) (2026-10-16)
 
 
